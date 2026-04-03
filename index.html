@@ -3,8 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#000000">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,10 +13,13 @@
   <title>Healthify Pro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1"></script>
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
 </head>
@@ -39,11 +41,14 @@
             <div class="ring-svg-wrap">
               <svg class="ring-svg" width="130" height="130" viewBox="0 0 130 130">
                 <circle class="ring-track" cx="65" cy="65" r="55" stroke="rgba(255,55,95,0.18)" />
-                <circle class="ring-fill" id="r-move" cx="65" cy="65" r="55" stroke="var(--pink)" stroke-dasharray="0 346" />
+                <circle class="ring-fill" id="r-move" cx="65" cy="65" r="55" stroke="var(--pink)"
+                  stroke-dasharray="0 346" />
                 <circle class="ring-track" cx="65" cy="65" r="40" stroke="rgba(48,209,88,0.18)" />
-                <circle class="ring-fill" id="r-exer" cx="65" cy="65" r="40" stroke="var(--green)" stroke-dasharray="0 251" />
+                <circle class="ring-fill" id="r-exer" cx="65" cy="65" r="40" stroke="var(--green)"
+                  stroke-dasharray="0 251" />
                 <circle class="ring-track" cx="65" cy="65" r="25" stroke="rgba(50,210,255,0.18)" />
-                <circle class="ring-fill" id="r-stand" cx="65" cy="65" r="25" stroke="var(--cyan)" stroke-dasharray="0 157" />
+                <circle class="ring-fill" id="r-stand" cx="65" cy="65" r="25" stroke="var(--cyan)"
+                  stroke-dasharray="0 157" />
               </svg>
             </div>
             <div class="ring-labels">
@@ -125,10 +130,13 @@
         <div class="card anim">
           <div class="cal-display">
             <div class="cal-big" id="nutr-cals">0</div>
-            <div class="cal-sub">of <span id="nutr-cal-goal">2000</span> kcal · <span id="nutr-remaining">2000</span> remaining</div>
+            <div class="cal-sub">of <span id="nutr-cal-goal">2000</span> kcal · <span id="nutr-remaining">2000</span>
+              remaining</div>
           </div>
           <div class="bar-track" style="height:8px;border-radius:8px;margin:14px 0">
-            <div class="bar-fill" id="cal-bar" style="background:linear-gradient(90deg,var(--orange),var(--pink));width:0%;height:8px;border-radius:8px"></div>
+            <div class="bar-fill" id="cal-bar"
+              style="background:linear-gradient(90deg,var(--orange),var(--pink));width:0%;height:8px;border-radius:8px">
+            </div>
           </div>
           <div class="macro-bars">
             <div class="macro-row">
@@ -136,21 +144,27 @@
                 <span class="macro-name" style="color:#fffacd">Protein</span>
                 <span class="macro-nums"><span id="nutr-prot">0</span>g / <span id="nutr-prot-goal">150</span>g</span>
               </div>
-              <div class="bar-track"><div class="bar-fill" id="bar-prot" style="background:var(--pink);width:0%"></div></div>
+              <div class="bar-track">
+                <div class="bar-fill" id="bar-prot" style="background:var(--pink);width:0%"></div>
+              </div>
             </div>
             <div class="macro-row">
               <div class="macro-label">
                 <span class="macro-name" style="color:var(--orange)">Carbs</span>
                 <span class="macro-nums"><span id="nutr-carb">0</span>g / <span id="nutr-carb-goal">250</span>g</span>
               </div>
-              <div class="bar-track"><div class="bar-fill" id="bar-carb" style="background:var(--orange);width:0%"></div></div>
+              <div class="bar-track">
+                <div class="bar-fill" id="bar-carb" style="background:var(--orange);width:0%"></div>
+              </div>
             </div>
             <div class="macro-row">
               <div class="macro-label">
                 <span class="macro-name" style="color:#adf">Fat</span>
                 <span class="macro-nums"><span id="nutr-fat">0</span>g / <span id="nutr-fat-goal">65</span>g</span>
               </div>
-              <div class="bar-track"><div class="bar-fill" id="bar-fat" style="background:var(--blue);width:0%"></div></div>
+              <div class="bar-track">
+                <div class="bar-fill" id="bar-fat" style="background:var(--blue);width:0%"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -222,16 +236,20 @@
           <!-- Controls -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <button class="btn-add" onclick="toggleLocation()" id="loc-track-btn">📍 Start Tracking</button>
-            <button class="btn-sec"  onclick="clearRoute()">🗑 Clear Route</button>
+            <button class="btn-sec" onclick="clearRoute()">🗑 Clear Route</button>
           </div>
-          <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:10px">Tracking only works while app is active in foreground</div>
+          <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:10px">Tracking only works while app
+            is active in foreground</div>
         </div>
 
         <!-- PEDOMETER -->
         <div class="card anim anim-1" style="text-align:center;padding:28px">
-          <div style="font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Pedometer Session</div>
+          <div
+            style="font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">
+            Pedometer Session</div>
           <div class="step-big" id="fit-steps">0</div>
-          <div style="font-size:15px;color:var(--text2);margin:8px 0 16px" id="fit-cals-burned">0 kcal burned · 0.0 km</div>
+          <div style="font-size:15px;color:var(--text2);margin:8px 0 16px" id="fit-cals-burned">0 kcal burned · 0.0 km
+          </div>
           <div class="pedometer-badge inactive" id="pedometer-status">TRACKING STOPPED</div>
           <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:10px;margin-top:10px">
             <button class="btn-add" id="sensor-btn" onclick="requestPedometer()">
@@ -244,10 +262,14 @@
           <div style="font-size:11px;color:var(--text3);margin-top:14px">Tracking only works while app is active.</div>
         </div>
 
-        <div class="sec-hdr anim anim-2"><h2>Quick Workouts</h2></div>
+        <div class="sec-hdr anim anim-2">
+          <h2>Quick Workouts</h2>
+        </div>
         <div class="card anim anim-2" id="workout-list"></div>
 
-        <div class="sec-hdr anim anim-3"><h2>Recent Activity</h2></div>
+        <div class="sec-hdr anim anim-3">
+          <h2>Recent Activity</h2>
+        </div>
         <div class="card anim anim-3" id="recent-workouts"></div>
       </div>
 
@@ -300,7 +322,8 @@
         </div>
 
         <div class="card anim" style="text-align:center;padding:24px">
-          <div class="profile-avatar" id="prof-avatar" style="background:linear-gradient(135deg,var(--blue),var(--purple))">?</div>
+          <div class="profile-avatar" id="prof-avatar"
+            style="background:linear-gradient(135deg,var(--blue),var(--purple))">?</div>
           <div class="profile-name" id="prof-name">Your Name</div>
           <div class="profile-sub" id="prof-goal-label">Goal not set</div>
           <button class="btn-add" style="margin-top:16px;width:100%" onclick="showOnboarding()">
@@ -407,13 +430,20 @@
         <div class="close-btn" onclick="closeFoodModal()" role="button" aria-label="Close"></div>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:12px">
-        <button class="btn-add" style="flex:1;font-size:13px" onclick="setMealType('breakfast')" id="meal-btn-breakfast">🌅 Breakfast</button>
-        <button class="btn-sec" style="flex:1;font-size:13px" onclick="setMealType('lunch')" id="meal-btn-lunch">☀️ Lunch</button>
-        <button class="btn-sec" style="flex:1;font-size:13px" onclick="setMealType('dinner')" id="meal-btn-dinner">🌙 Dinner</button>
-        <button class="btn-sec" style="flex:1;font-size:13px" onclick="setMealType('snack')" id="meal-btn-snack">🍎 Snack</button>
+        <button class="btn-add" style="flex:1;font-size:13px" onclick="setMealType('breakfast')"
+          id="meal-btn-breakfast">🌅 Breakfast</button>
+        <button class="btn-sec" style="flex:1;font-size:13px" onclick="setMealType('lunch')" id="meal-btn-lunch">☀️
+          Lunch</button>
+        <button class="btn-sec" style="flex:1;font-size:13px" onclick="setMealType('dinner')" id="meal-btn-dinner">🌙
+          Dinner</button>
+        <button class="btn-sec" style="flex:1;font-size:13px" onclick="setMealType('snack')" id="meal-btn-snack">🍎
+          Snack</button>
       </div>
-      <input class="food-search" id="food-search" placeholder="Search food (e.g. Rice, Dal, Chicken…)" oninput="filterFoods(this.value)" autocomplete="off">
-      <button class="btn-sec" style="width:100%;margin-bottom:12px;border:1.5px dashed var(--sep);background:transparent" onclick="openCustomFoodModal()">
+      <input class="food-search" id="food-search" placeholder="Search food (e.g. Rice, Dal, Chicken…)"
+        oninput="filterFoods(this.value)" autocomplete="off">
+      <button class="btn-sec"
+        style="width:100%;margin-bottom:12px;border:1.5px dashed var(--sep);background:transparent"
+        onclick="openCustomFoodModal()">
         <span style="font-size:18px;margin-right:8px">+</span> Add Custom Food
       </button>
       <div class="food-list" id="food-list"></div>
@@ -429,6 +459,15 @@
         <div class="close-btn" onclick="closeQtyModal()" role="button" aria-label="Close"></div>
       </div>
       <div style="font-size:14px;color:var(--text2);margin-bottom:16px" id="qty-food-detail"></div>
+      <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px">PORTION</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px" id="portion-btns">
+        <button class="btn-sec" style="flex:1;font-size:13px;padding:10px" onclick="setPortion(0.75)"
+          id="port-btn-sm">Small</button>
+        <button class="btn-add" style="flex:1;font-size:13px;padding:10px" onclick="setPortion(1)"
+          id="port-btn-md">Medium</button>
+        <button class="btn-sec" style="flex:1;font-size:13px;padding:10px" onclick="setPortion(1.5)"
+          id="port-btn-lg">Large</button>
+      </div>
       <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px">SERVINGS</div>
       <div class="qty-row">
         <button class="qty-btn" onclick="changeQty(-1)">−</button>
@@ -438,28 +477,56 @@
       <div style="background:var(--bg3);border-radius:var(--radius-md);padding:14px;margin-bottom:16px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <span style="color:var(--text2);font-size:14px">Calories</span>
-          <input type="number" id="qty-cals-input" class="ob-input" style="width:80px;margin:0;padding:4px 8px;text-align:right;font-weight:700;color:var(--orange)" oninput="updateCustomMacros('cal')">
+          <input type="number" id="qty-cals-input" class="ob-input"
+            style="width:80px;margin:0;padding:4px 8px;text-align:right;font-weight:700;color:var(--orange)"
+            oninput="updateCustomMacros('cal')">
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <span style="color:var(--text2);font-size:14px">Protein (g)</span>
-          <input type="number" id="qty-prot-input" class="ob-input" style="width:80px;margin:0;padding:4px 8px;text-align:right" oninput="updateCustomMacros('prot')">
+          <input type="number" id="qty-prot-input" class="ob-input"
+            style="width:80px;margin:0;padding:4px 8px;text-align:right" oninput="updateCustomMacros('prot')">
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <span style="color:var(--text2);font-size:14px">Carbs (g)</span>
-          <input type="number" id="qty-carb-input" class="ob-input" style="width:80px;margin:0;padding:4px 8px;text-align:right" oninput="updateCustomMacros('carb')">
+          <input type="number" id="qty-carb-input" class="ob-input"
+            style="width:80px;margin:0;padding:4px 8px;text-align:right" oninput="updateCustomMacros('carb')">
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center">
           <span style="color:var(--text2);font-size:14px">Fat (g)</span>
-          <input type="number" id="qty-fat-input" class="ob-input" style="width:80px;margin:0;padding:4px 8px;text-align:right" oninput="updateCustomMacros('fat')">
+          <input type="number" id="qty-fat-input" class="ob-input"
+            style="width:80px;margin:0;padding:4px 8px;text-align:right" oninput="updateCustomMacros('fat')">
         </div>
       </div>
-      <div id="qty-display-static" style="display:none;background:var(--bg3);border-radius:var(--radius-md);padding:14px;margin-bottom:16px">
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--text2);font-size:14px">Calories</span><span id="qty-cals" style="font-weight:700;color:var(--orange)">0 kcal</span></div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--text2);font-size:14px">Protein</span><span id="qty-prot" style="font-weight:600">0 g</span></div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--text2);font-size:14px">Carbs</span><span id="qty-carb" style="font-weight:600">0 g</span></div>
-        <div style="display:flex;justify-content:space-between"><span style="color:var(--text2);font-size:14px">Fat</span><span id="qty-fat" style="font-weight:600">0 g</span></div>
+      <div id="qty-display-static"
+        style="display:none;background:var(--bg3);border-radius:var(--radius-md);padding:14px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span
+            style="color:var(--text2);font-size:14px">Calories</span><span id="qty-cals"
+            style="font-weight:700;color:var(--orange)">0 kcal</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span
+            style="color:var(--text2);font-size:14px">Protein</span><span id="qty-prot" style="font-weight:600">0
+            g</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span
+            style="color:var(--text2);font-size:14px">Carbs</span><span id="qty-carb" style="font-weight:600">0 g</span>
+        </div>
+        <div style="display:flex;justify-content:space-between"><span
+            style="color:var(--text2);font-size:14px">Fat</span><span id="qty-fat" style="font-weight:600">0 g</span>
+        </div>
       </div>
-      <button class="btn-add" style="width:100%" onclick="confirmAddFood()">Add to <span id="qty-meal-label">Meal</span></button>
+      <div
+        style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">
+        Add To</div>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <button class="btn-sec" style="flex:1;font-size:13px;padding:10px" onclick="selectQtyMeal('breakfast')"
+          id="qty-meal-breakfast">Breakfast</button>
+        <button class="btn-sec" style="flex:1;font-size:13px;padding:10px" onclick="selectQtyMeal('lunch')"
+          id="qty-meal-lunch">Lunch</button>
+        <button class="btn-sec" style="flex:1;font-size:13px;padding:10px" onclick="selectQtyMeal('dinner')"
+          id="qty-meal-dinner">Dinner</button>
+        <button class="btn-sec" style="flex:1;font-size:13px;padding:10px" onclick="selectQtyMeal('snack')"
+          id="qty-meal-snack">Snack</button>
+      </div>
+      <button class="btn-add" style="width:100%" onclick="confirmAddFood()">Add to <span
+          id="qty-meal-label">Meal</span></button>
     </div>
   </div>
 
@@ -476,12 +543,44 @@
       <div class="ob-label">Calories (kcal)</div>
       <input class="ob-input" id="cf-cals" placeholder="250" type="number" style="margin-bottom:12px">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
-        <div><div class="ob-label">Prot (g)</div><input class="ob-input" id="cf-prot" placeholder="0" type="number"></div>
-        <div><div class="ob-label">Carb (g)</div><input class="ob-input" id="cf-carb" placeholder="0" type="number"></div>
+        <div>
+          <div class="ob-label">Prot (g)</div><input class="ob-input" id="cf-prot" placeholder="0" type="number">
+        </div>
+        <div>
+          <div class="ob-label">Carb (g)</div><input class="ob-input" id="cf-carb" placeholder="0" type="number">
+        </div>
       </div>
       <button class="btn-add" style="width:100%" onclick="confirmCustomFood()">Add to Log</button>
     </div>
   </div>
+
+  <!-- AI DETECTION MODAL -->
+  <div class="modal-backdrop" id="ai-modal" onclick="e=>e.target===this&&closeAiModal()">
+    <div class="modal-sheet" onclick="e=>e.stopPropagation()">
+      <div class="modal-handle"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="modal-title" style="margin-bottom:0">Food AI Scanner</div>
+        <div class="close-btn" onclick="closeAiModal()" role="button" aria-label="Close"></div>
+      </div>
+      <div id="ai-loading" style="text-align:center;padding:20px;display:none">
+        <div class="pulse-dot" style="width:24px;height:24px;background:var(--blue);margin:0 auto 12px"></div>
+        <div>Analyzing food…</div>
+      </div>
+      <div id="ai-result" style="display:none">
+        <div style="text-align:center;margin-bottom:12px;color:var(--text2);font-size:13px" id="ai-detected-label">
+          Detected: "---"</div>
+        <div style="font-size:16px;font-weight:600;margin-bottom:12px">Choose correct food:</div>
+        <div id="ai-options"></div>
+        <div style="margin-top:16px;font-size:13px;color:var(--text3);text-align:center">Detection is approximate.
+          Please confirm.</div>
+        <button class="btn-sec" style="width:100%;margin-top:12px" onclick="fallbackToSearch()">Search Manually</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAMERA INPUT (HIDDEN) -->
+  <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none"
+    onchange="processAiImage(event)">
 
   <!-- MANUAL ACTIVITY MODAL -->
   <div class="modal-backdrop" id="activity-modal" onclick="e=>e.target===this&&closeActivityModal()">
@@ -543,12 +642,20 @@
         <div class="ob-title" id="ob-title-5">All Set! 🎉</div>
         <div class="ob-sub">Here's your personalised plan based on your profile.</div>
         <div class="card" style="margin:0 0 12px;background:var(--bg3)">
-          <div style="display:flex;justify-content:space-between;margin-bottom:10px"><span style="color:var(--text2)">Daily Calories</span><span style="font-weight:700;color:var(--orange)" id="ob-result-cals">—</span></div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:10px"><span style="color:var(--text2)">Protein</span><span style="font-weight:700;color:var(--pink)" id="ob-result-prot">—</span></div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:10px"><span style="color:var(--text2)">Carbs</span><span style="font-weight:700;color:var(--orange)" id="ob-result-carb">—</span></div>
-          <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Fat</span><span style="font-weight:700;color:var(--blue)" id="ob-result-fat">—</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px"><span
+              style="color:var(--text2)">Daily Calories</span><span style="font-weight:700;color:var(--orange)"
+              id="ob-result-cals">—</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px"><span
+              style="color:var(--text2)">Protein</span><span style="font-weight:700;color:var(--pink)"
+              id="ob-result-prot">—</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px"><span
+              style="color:var(--text2)">Carbs</span><span style="font-weight:700;color:var(--orange)"
+              id="ob-result-carb">—</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Fat</span><span
+              style="font-weight:700;color:var(--blue)" id="ob-result-fat">—</span></div>
         </div>
-        <div style="background:rgba(10,132,255,0.12);border-radius:var(--radius-md);padding:14px;border:1px solid rgba(10,132,255,0.3)">
+        <div
+          style="background:rgba(10,132,255,0.12);border-radius:var(--radius-md);padding:14px;border:1px solid rgba(10,132,255,0.3)">
           <div style="font-size:13px;color:var(--blue);font-weight:600;margin-bottom:4px">💡 Your Health Score</div>
           <div style="font-size:32px;font-weight:800;color:var(--green)" id="ob-result-score">—</div>
           <div style="font-size:13px;color:var(--text2);margin-top:4px" id="ob-result-tip"></div>
@@ -579,4 +686,5 @@
   </script>
 
 </body>
+
 </html>

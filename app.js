@@ -577,6 +577,7 @@ function getAllMealItems(dayData){
 }
 
 let currentMealType='breakfast',currentFood=null,currentQty=1,editingMeal=null;
+let selectedQtyMeal='breakfast';
 let foodSearchDebounce=null;
 
 function setMealType(t){
@@ -657,7 +658,18 @@ function openQtyModal(idx){
   currentQty=1;
   document.getElementById('qty-food-name').textContent=currentFood.name;
   document.getElementById('qty-food-detail').textContent=idx===-1?'Enter macros manually':`Per serving: ${currentFood.serving}`;
-  document.getElementById('qty-meal-label').textContent=currentMealType.charAt(0).toUpperCase()+currentMealType.slice(1);
+  
+  if (isAiScanning) {
+    const hr = new Date().getHours();
+    if (hr < 11) selectedQtyMeal = 'breakfast';
+    else if (hr < 16) selectedQtyMeal = 'lunch';
+    else if (hr < 21) selectedQtyMeal = 'dinner';
+    else selectedQtyMeal = 'snack';
+  } else {
+    selectedQtyMeal = currentMealType;
+  }
+  selectQtyMeal(selectedQtyMeal);
+
   const isCustom=idx===-1;
   document.getElementById('qty-display-static').style.display=isCustom?'none':'block';
   document.querySelector('.qty-row').style.display=isCustom?'none':'flex';
@@ -667,8 +679,28 @@ function openQtyModal(idx){
   inputBlock.style.display=isCustom?'block':'none';
   if(!isCustom){['qty-cals-input','qty-prot-input','qty-carb-input','qty-fat-input'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});updateQtyDisplay();}
   else{['qty-cals-input','qty-prot-input','qty-carb-input','qty-fat-input'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});}
+  
+  if (document.getElementById('port-btn-sm')) {
+    document.getElementById('port-btn-sm').className = 'btn-sec';
+    document.getElementById('port-btn-md').className = 'btn-add';
+    document.getElementById('port-btn-lg').className = 'btn-sec';
+  }
+  
   document.getElementById('qty-modal').classList.add('open');
 }
+
+function setPortion(multiplier) {
+  currentQty = multiplier;
+  vibrate(5);
+  const sm = document.getElementById('port-btn-sm');
+  const md = document.getElementById('port-btn-md');
+  const lg = document.getElementById('port-btn-lg');
+  if(sm) sm.className = multiplier === 0.75 ? 'btn-add' : 'btn-sec';
+  if(md) md.className = multiplier === 1 ? 'btn-add' : 'btn-sec';
+  if(lg) lg.className = multiplier === 1.5 ? 'btn-add' : 'btn-sec';
+  updateQtyDisplay();
+}
+
 function updateCustomMacros(type){
   const val=parseFloat(document.getElementById(`qty-${type}-input`).value)||0;
   if(type==='cal') currentFood.cal=val; else currentFood[type]=val;
@@ -687,17 +719,312 @@ function updateQtyDisplay(){
   document.getElementById('qty-fat').textContent=Math.round(currentFood.fat*currentQty*10)/10+' g';
 }
 
+function selectQtyMeal(meal) {
+  selectedQtyMeal = meal;
+  ['breakfast', 'lunch', 'dinner', 'snack'].forEach(m => {
+    const btn = document.getElementById('qty-meal-' + m);
+    if (btn) btn.className = (m === meal) ? 'btn-add' : 'btn-sec';
+  });
+  const lblEl = document.getElementById('qty-meal-label');
+  if (lblEl) lblEl.textContent = meal.charAt(0).toUpperCase() + meal.slice(1);
+}
+
 function confirmAddFood(){
   const d=getTodayData();
   const entry={name:currentFood.name,icon:currentFood.icon||'utensils',cal:Math.round(currentFood.cal*currentQty),prot:Math.round(currentFood.prot*currentQty*10)/10,carb:Math.round(currentFood.carb*currentQty*10)/10,fat:Math.round(currentFood.fat*currentQty*10)/10,qty:currentQty,serving:currentFood.serving,time:timeStr()};
   if(editingMeal){d.meals[editingMeal.type][editingMeal.index]=entry;showToast(`Updated ${entry.name}`);editingMeal=null;}
-  else{d.meals[currentMealType].push(entry);showToast(`✅ Added ${entry.name}`);}
+  else{d.meals[selectedQtyMeal].push(entry);showToast(`✅ Added ${entry.name}`);}
   save(); closeQtyModal(); closeFoodModal();
   vibrate([10,20,10]);
   renderNutrition(); renderHome();
 }
 
-function openScanner(){showToast('📷 Use food search to log meals.');closeFoodModal();}
+// ==================== SMART FOOD ENGINE & AI ====================
+
+const FOOD_ENGINE = [
+  { keywords: ["rice", "white rice", "brown rice", "cooked rice", "dish"], name: "Steamed Rice", cal: 206, prot: 4, carb: 45, fat: 0.4, serving: "1 cup" },
+  { keywords: ["curry", "stew", "soup", "chana", "lentil", "sauce", "bowl"], name: "Dal Tadka", cal: 200, prot: 12, carb: 28, fat: 6, serving: "1 bowl" },
+  { keywords: ["paneer", "cheese", "curd", "tofu"], name: "Paneer (Cottage Cheese)", cal: 265, prot: 18, carb: 2, fat: 20, serving: "100g" },
+  { keywords: ["chicken", "meat", "poultry", "fry", "broiled"], name: "Chicken Breast", cal: 165, prot: 31, carb: 0, fat: 3.6, serving: "100g" },
+  { keywords: ["egg", "boiled egg", "omelette", "scrambled", "yolk", "round", "oval"], name: "Egg (Boiled)", cal: 77, prot: 6, carb: 0.6, fat: 5, serving: "1 large egg" },
+  { keywords: ["banana", "fruit", "yellow"], name: "Banana", cal: 89, prot: 1.1, carb: 23, fat: 0.3, serving: "1 medium" },
+  { keywords: ["apple", "fruit", "granny smith", "red", "round"], name: "Apple", cal: 52, prot: 0.3, carb: 14, fat: 0.2, serving: "1 medium" },
+  { keywords: ["tomato", "vegetable", "red fruit", "salad", "red", "round", "berry"], name: "Tomato", cal: 18, prot: 0.9, carb: 4, fat: 0.2, serving: "1 medium" },
+  { keywords: ["bread", "roti", "chapati", "flatbread", "wheat", "loaf", "bun", "bakery"], name: "Roti (Whole Wheat)", cal: 120, prot: 4, carb: 25, fat: 1, serving: "1 roti" },
+  { keywords: ["tea", "chai", "coffee", "cup", "beverage", "mug"], name: "Masala Chai (with milk)", cal: 65, prot: 2, carb: 9, fat: 2, serving: "1 cup" },
+  { keywords: ["salad", "spinach", "leafy green", "vegetable", "lettuce"], name: "Spinach", cal: 23, prot: 3, carb: 4, fat: 0.4, serving: "100g" },
+  { keywords: ["fish", "seafood", "salmon", "tuna"], name: "Fish (Rohu)", cal: 97, prot: 17, carb: 0, fat: 2.5, serving: "100g" },
+  { keywords: ["biryani", "rice dish", "fried rice", "pilaf"], name: "Mutton Biryani", cal: 450, prot: 22, carb: 52, fat: 15, serving: "1 plate" }
+];
+
+let mobilenetModel = null;
+let aiLearnedData = JSON.parse(localStorage.getItem('hpro_ai_learn') || '{}');
+let aiRecentSelections = JSON.parse(localStorage.getItem('hpro_ai_recent') || '[]');
+let isAiScanning = false;
+let currentAiLabels = [];
+const BLOCKED_LABELS = ["keyboard", "screen", "monitor", "laptop", "device", "table", "furniture", "desk", "computer"];
+
+async function loadAiModel() {
+  if (mobilenetModel) return;
+  try {
+    mobilenetModel = await mobilenet.load({version: 2, alpha: 0.5}); // Lightweight fast model
+  } catch (err) {
+    console.error("Model load error", err);
+  }
+}
+
+function openScanner(){
+  if (isAiScanning) return; // Prevent double scanning
+  const input = document.getElementById('camera-input');
+  if (input) input.click();
+}
+
+function processAiImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  isAiScanning = true;
+  document.getElementById('ai-modal').classList.add('open');
+  document.getElementById('ai-loading').style.display = 'block';
+  document.getElementById('ai-result').style.display = 'none';
+
+  const img = new Image();
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    img.src = e.target.result;
+    img.onload = async () => {
+      if (!mobilenetModel) await loadAiModel();
+      if (!mobilenetModel) {
+        showToast('AI model not ready. Try search.');
+        fallbackToSearch();
+        return;
+      }
+      try {
+        // IMAGE OPTIMIZATION (224x224) to reduce memory & improve speed
+        const cvs = document.createElement('canvas');
+        cvs.width = 224; cvs.height = 224;
+        const ctx = cvs.getContext('2d');
+        ctx.drawImage(img, 0, 0, 224, 224);
+
+        const predictions = await mobilenetModel.classify(cvs);
+        handleAiPredictions(predictions);
+      } catch (err) {
+        console.error("Prediction error", err);
+        showToast('Detection error');
+        fallbackToSearch();
+      }
+    };
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleAiPredictions(predictions) {
+  document.getElementById('ai-loading').style.display = 'none';
+  if (!predictions || predictions.length === 0) {
+    fallbackToSearch();
+    return;
+  }
+  
+  const topPred = predictions[0];
+  const topConf = topPred.probability;
+  const confPercent = Math.round(topConf * 100);
+  
+  // Format the primary label cleanly
+  const generalLabelRaw = topPred.className.split(',')[0];
+  const generalLabel = generalLabelRaw.charAt(0).toUpperCase() + generalLabelRaw.slice(1);
+  
+  let rawLabels = [];
+  let predProbs = {};
+  
+  // 1. Multi-Prediction extraction
+  predictions.forEach(p => {
+    p.className.toLowerCase().split(/[,\s]+/).forEach(w => {
+      const cleanWord = w.trim();
+      if (cleanWord) {
+        rawLabels.push(cleanWord);
+        // Map word to its probability for boost calculation later
+        if (!predProbs[cleanWord] || p.probability > predProbs[cleanWord]) {
+           predProbs[cleanWord] = p.probability;
+        }
+      }
+    });
+  });
+  
+  rawLabels = [...new Set(rawLabels)];
+  currentAiLabels = rawLabels;
+
+  if (rawLabels.length === 0) {
+    fallbackToSearch();
+    return;
+  }
+
+  // Section 1: AI Detection (Always visible)
+  let uiHtml = `
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="font-size:18px;font-weight:700;color:var(--text1)">Detected: ${generalLabel}</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:2px">Confidence: ${confPercent}%</div>
+    </div>
+  `;
+  
+  if (confPercent < 50) {
+    uiHtml += `<div style="text-align:center;color:var(--orange);font-size:13px;margin-bottom:16px">Low confidence detection. Please confirm.</div>`;
+  }
+  
+  let matches = [];
+  
+  // 6. Category Check: Only trigger food engine if not explicitly blocked
+  const isExplicitlyNonFood = BLOCKED_LABELS.some(l => rawLabels.includes(l));
+  
+  if (!isExplicitlyNonFood) {
+    // 3. Learning System Override (High Priority)
+    let learnedFound = false;
+    for (const label of rawLabels) {
+      if (aiLearnedData[label]) {
+        const learnedName = aiLearnedData[label];
+        const learnedFood = FOOD_ENGINE.find(f => f.name === learnedName) || FOODS.find(f => f.name === learnedName);
+        if (learnedFood && !matches.find(m => m.name === learnedFood.name)) {
+          matches.push({...learnedFood, score: 1000}); 
+          learnedFound = true;
+        }
+      }
+    }
+    
+    const isFruitOrBerry = rawLabels.some(l => l.includes('berry') || l.includes('fruit') || l.includes('round'));
+
+    // 2. Advanced Scoring Engine & Context Intelligence
+    FOOD_ENGINE.forEach(food => {
+      if (matches.find(m => m.name === food.name)) return;
+      let score = 0;
+      let maxBaseProb = 0;
+      
+      if (isFruitOrBerry && food.keywords.some(k => k === 'fruit' || k === 'round' || k === 'berry' || k === 'apple' || k === 'tomato')) {
+        score += 0.4;
+      }
+
+      food.keywords.forEach(kw => {
+        if (rawLabels.includes(kw)) {
+          score += 1;
+          maxBaseProb = Math.max(maxBaseProb, predProbs[kw] || 0);
+        } else if (rawLabels.some(rl => rl.includes(kw) || kw.includes(rl))) {
+          score += 0.5;
+          const pMatch = rawLabels.find(rl => rl.includes(kw) || kw.includes(rl));
+          maxBaseProb = Math.max(maxBaseProb, predProbs[pMatch] || 0);
+        }
+      });
+
+      if (score > 0) {
+        // Confidence Boost
+        score += (maxBaseProb * 0.5);
+        
+        // Context: Recent Selections
+        if (aiRecentSelections.includes(food.name)) {
+          score += 0.3;
+        }
+        
+        // Context: Meal Type
+        const mType = currentMealType; 
+        const breakfastFoods = ["Egg (Boiled)", "Banana", "Apple", "Milk (Full Cream)", "Oats", "Masala Chai (with milk)"];
+        const lunchDinnerFoods = ["Steamed Rice", "Dal Tadka", "Paneer (Cottage Cheese)", "Chicken Breast", "Roti (Whole Wheat)", "Fish (Rohu)", "Mutton Biryani"];
+        
+        if (mType === 'breakfast' && breakfastFoods.includes(food.name)) score += 0.5;
+        if ((mType === 'lunch' || mType === 'dinner') && lunchDinnerFoods.includes(food.name)) score += 0.5;
+
+        matches.push({...food, score});
+      }
+    });
+
+    matches.sort((a,b) => b.score - a.score);
+    matches = matches.slice(0, 4);
+  }
+
+  // Section 2: Food Suggestions / Non-Food Response
+  if (matches.length > 0) {
+    // 6. FAST PATH (SMART AUTO ADD)
+    if (topConf > 0.75 && matches[0].score >= 1.5) {
+        selectAiFood(matches[0].name, true);
+        return;
+    }
+
+    uiHtml += `<div style="font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em">Food Suggestions</div>`;
+    uiHtml += matches.map((m, idx) => `
+      <div class="food-opt" style="background:var(--bg3);border-radius:var(--radius-sm);margin-bottom:8px;padding:12px;border:1px solid ${idx === 0 ? 'var(--blue)' : 'var(--sep)'};display:flex;justify-content:space-between;align-items:center;" onclick="selectAiFood('${m.name}')">
+        <div>
+          <div style="font-weight:600;font-size:15px;color:var(--text1)">${m.name}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">${m.cal} kcal · ${m.prot}g P</div>
+          ${idx === 0 ? `<div style="font-size:10px;color:var(--blue);font-weight:700;margin-top:4px;text-transform:uppercase">★ Recommended</div>` : ''}
+        </div>
+        <button class="btn-add" style="padding:8px 12px;font-size:13px">Add</button>
+      </div>
+    `).join('');
+  } else {
+    // 3. HANDLE NON-FOOD CASES SMARTLY
+    uiHtml += `
+      <div style="background:rgba(255,159,10,0.1);border:1px solid rgba(255,159,10,0.2);padding:14px;border-radius:var(--radius-sm);text-align:center;margin-bottom:16px">
+        <div style="font-size:14px;font-weight:600;color:var(--orange);margin-bottom:4px">Non-Food Detected</div>
+        <div style="font-size:13px;color:var(--text2)">This item is not recognized as food.</div>
+      </div>
+    `;
+  }
+
+  // 7. UX Improvement: Persistent Clean Fallbacks
+  uiHtml += `<div style="margin-top:16px;font-size:13px;color:var(--text3);text-align:center">Detection is approximate. Please confirm.</div>`;
+  uiHtml += `<button class="btn-sec" style="width:100%;margin-top:12px" onclick="fallbackToSearch()">Search Manually</button>`;
+
+  document.getElementById('ai-result').innerHTML = uiHtml;
+  document.getElementById('ai-result').style.display = 'block';
+}
+
+function selectAiFood(foodName, autoAdd = false) {
+  // Update Recent Selections
+  aiRecentSelections = [foodName, ...aiRecentSelections.filter(f => f !== foodName)].slice(0, 10);
+  localStorage.setItem('hpro_ai_recent', JSON.stringify(aiRecentSelections));
+
+  // Advanced learning context association
+  if (currentAiLabels.length > 0) {
+    const labelsToLearn = currentAiLabels.slice(0, 2);
+    labelsToLearn.forEach(lbl => {
+      aiLearnedData[lbl] = foodName;
+    });
+    localStorage.setItem('hpro_ai_learn', JSON.stringify(aiLearnedData));
+  }
+  
+  closeAiModal();
+  
+  let baseFood = FOODS.find(f => f.name === foodName);
+  
+  if (!baseFood) {
+    const engFood = FOOD_ENGINE.find(f => f.name === foodName);
+    if (engFood) {
+      baseFood = { ...engFood, icon: 'utensils' };
+      FOODS.push(baseFood);
+    }
+  }
+  
+  if (baseFood) {
+    if (autoAdd) {
+      currentFood = baseFood;
+      currentQty = 1; // Default
+      confirmAddFood();
+      showToast('⚡ Auto-logged: ' + baseFood.name);
+    } else {
+      openQtyModal(FOODS.indexOf(baseFood));
+    }
+  } else {
+    fallbackToSearch();
+  }
+}
+
+function closeAiModal() {
+  document.getElementById('ai-modal').classList.remove('open');
+  const input = document.getElementById('camera-input');
+  if (input) input.value = '';
+  isAiScanning = false;
+}
+
+function fallbackToSearch() {
+  closeAiModal();
+  openAddFood();
+}
 
 function addWater(){
   const d=getTodayData();
