@@ -168,6 +168,15 @@ let locationWatchId = null;
 let routePoints = [];
 let totalDistanceKm = 0;
 let lsSaveTimer = null;
+let trackingStartTime = null;
+let totalTrackingTimeMs = 0;
+let trackingInterval = null;
+let autoFollowUser = true;
+
+function toggleMapFollow() {
+  const chk = document.getElementById('map-follow-toggle');
+  if (chk) autoFollowUser = chk.checked;
+}
 
 // Haversine formula — returns km between two lat/lng points
 function haversineKm(a, b) {
@@ -198,14 +207,12 @@ function initMap(lat, lng) {
     attribution: '© OSM'
   }).addTo(mapInstance);
 
-  // Attribution (small, bottom-right)
   L.control.attribution({ position: 'bottomright', prefix: false })
     .addAttribution('© <a href="https://openstreetmap.org">OSM</a>')
     .addTo(mapInstance);
 
-  // Custom marker (CSS dot, no external image needed)
   const markerIcon = L.divIcon({
-    className: '',
+    className: 'smooth-marker',
     html: `<div style="
       width:16px;height:16px;background:var(--blue);
       border:2.5px solid #fff;border-radius:50%;
@@ -217,7 +224,6 @@ function initMap(lat, lng) {
 
   mapMarker = L.marker([lat, lng], { icon: markerIcon }).addTo(mapInstance);
 
-  // Polyline for route path
   mapPolyline = L.polyline([], {
     color: 'var(--blue)', weight: 4, opacity: 0.85,
     smoothFactor: 1,
@@ -229,11 +235,16 @@ function initMap(lat, lng) {
     routePoints = saved.map(p => ({ lat: p.lat, lng: p.lon || p.lng }));
     mapPolyline.setLatLngs(routePoints);
     recalcDistance();
+    
+    totalTrackingTimeMs = state.locationDuration || 0;
     updateRouteUI();
   }
 }
 
-function updateMapPosition(lat, lng) {
+function updateMapPosition(lat, lng, accuracy) {
+  // G. GPS ACCURACY FILTER
+  if (accuracy && accuracy > 40) return; // Ignore wildly inaccurate GPS jumps
+
   const pt = { lat, lng };
   const prev = routePoints[routePoints.length - 1];
 
@@ -243,7 +254,10 @@ function updateMapPosition(lat, lng) {
   routePoints.push(pt);
   if (mapMarker) mapMarker.setLatLng([lat, lng]);
   if (mapPolyline) mapPolyline.addLatLng([lat, lng]);
-  if (mapInstance) mapInstance.panTo([lat, lng], { animate: true, duration: 0.5 });
+  
+  if (mapInstance && autoFollowUser) {
+     mapInstance.panTo([lat, lng], { animate: true, duration: 0.5 });
+  }
 
   if (prev) totalDistanceKm += haversineKm(prev, pt);
   updateRouteUI();
@@ -260,16 +274,43 @@ function recalcDistance() {
 function updateRouteUI() {
   const km = totalDistanceKm.toFixed(2);
   const kcal = Math.round(totalDistanceKm * 60); // ~60 kcal/km average
+  
+  let currentSessionTime = 0;
+  if (state.locationEnabled && trackingStartTime) {
+    currentSessionTime = Date.now() - trackingStartTime;
+  }
+  const totalMs = totalTrackingTimeMs + currentSessionTime;
+  
+  const totalSecs = Math.floor(totalMs / 1000);
+  const m = Math.floor(totalSecs / 60);
+  const s = totalSecs % 60;
+  const timeStr = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+  
+  const hrs = totalSecs / 3600;
+  const speed = hrs > 0 ? (totalDistanceKm / hrs).toFixed(1) : "0.0";
+  
   const distEl  = document.getElementById('map-dist');
   const kcalEl  = document.getElementById('map-kcal');
+  const timeEl  = document.getElementById('map-time');
+  const speedEl = document.getElementById('map-speed');
+
   if (distEl)  distEl.textContent  = km + ' km';
   if (kcalEl)  kcalEl.textContent  = kcal + ' kcal';
+  if (timeEl)  timeEl.textContent  = timeStr;
+  if (speedEl) speedEl.textContent = speed + ' km/h';
 }
 
 function debounceRouteSave() {
   if (lsSaveTimer) clearTimeout(lsSaveTimer);
   lsSaveTimer = setTimeout(() => {
     state.locationLog = routePoints.map(p => ({ lat: p.lat, lon: p.lng, ts: Date.now() }));
+    
+    let currentSessionTime = 0;
+    if (state.locationEnabled && trackingStartTime) {
+      currentSessionTime = Date.now() - trackingStartTime;
+    }
+    state.locationDuration = totalTrackingTimeMs + currentSessionTime;
+    
     save();
   }, 2000); // batch writes every 2 s
 }
@@ -279,9 +320,9 @@ function startLocationTracking() {
 
   // Get first position to init map immediately
   navigator.geolocation.getCurrentPosition(pos => {
-    const { latitude: lat, longitude: lng } = pos.coords;
+    const { latitude: lat, longitude: lng, accuracy } = pos.coords;
     initMap(lat, lng);
-    updateMapPosition(lat, lng);
+    updateMapPosition(lat, lng, accuracy);
     updateMapStatusUI(true);
   }, err => {
     console.warn('Location error:', err);
@@ -293,9 +334,9 @@ function startLocationTracking() {
 
   // Watch for continuous updates
   locationWatchId = navigator.geolocation.watchPosition(pos => {
-    const { latitude: lat, longitude: lng } = pos.coords;
+    const { latitude: lat, longitude: lng, accuracy } = pos.coords;
     if (!mapInstance) initMap(lat, lng);
-    updateMapPosition(lat, lng);
+    updateMapPosition(lat, lng, accuracy);
   }, err => {
     console.warn('watchPosition error:', err);
   }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 });
@@ -308,9 +349,16 @@ function stopLocationTracking() {
   }
   updateMapStatusUI(false);
   if (lsSaveTimer) { clearTimeout(lsSaveTimer); lsSaveTimer = null; }
-  // Final save
+  
+  if (trackingStartTime) {
+     totalTrackingTimeMs += (Date.now() - trackingStartTime);
+     trackingStartTime = null;
+  }
+  
   state.locationLog = routePoints.map(p => ({ lat: p.lat, lon: p.lng, ts: Date.now() }));
+  state.locationDuration = totalTrackingTimeMs;
   save();
+  updateRouteUI();
 }
 
 function toggleLocation() {
@@ -318,12 +366,16 @@ function toggleLocation() {
   state.locationEnabled = !state.locationEnabled;
   syncToggle('loc-toggle', state.locationEnabled);
   syncLocTrackBtn(state.locationEnabled);
+  
   if (state.locationEnabled) {
+    trackingStartTime = Date.now();
+    trackingInterval = setInterval(updateRouteUI, 1000);
     startLocationTracking();
-    showToast('📍 Location tracking ON');
+    showToast('📍 Location tracking RESUMED');
   } else {
+    if (trackingInterval) { clearInterval(trackingInterval); trackingInterval = null; }
     stopLocationTracking();
-    showToast('📍 Location tracking OFF');
+    showToast('⏸ Location tracking PAUSED');
   }
   save();
 }
@@ -331,7 +383,7 @@ function toggleLocation() {
 function syncLocTrackBtn(active) {
   const btn = document.getElementById('loc-track-btn');
   if (!btn) return;
-  btn.textContent = active ? '⏹ Stop Tracking' : '📍 Start Tracking';
+  btn.textContent = active ? '⏸ Pause Tracking' : '📍 Resume Tracking';
   btn.className   = active ? 'btn-danger' : 'btn-add';
 }
 
@@ -339,7 +391,7 @@ function updateMapStatusUI(active) {
   const badge = document.getElementById('map-status');
   if (badge) {
     badge.className = active ? 'pedometer-badge active' : 'pedometer-badge inactive';
-    badge.innerHTML = active ? '<div class="pulse-dot"></div> TRACKING ACTIVE' : 'TRACKING STOPPED';
+    badge.innerHTML = active ? '<div class="pulse-dot"></div> TRACKING ACTIVE' : 'TRACKING PAUSED';
   }
   syncLocTrackBtn(active);
   // Also keep profile toggle in sync
@@ -350,7 +402,12 @@ function clearRoute() {
   if (!confirm('Clear this route? This cannot be undone.')) return;
   routePoints = [];
   totalDistanceKm = 0;
+  totalTrackingTimeMs = 0;
+  if (state.locationEnabled) trackingStartTime = Date.now();
+  else trackingStartTime = null;
+  
   state.locationLog = [];
+  state.locationDuration = 0;
   save();
   if (mapPolyline) mapPolyline.setLatLngs([]);
   updateRouteUI();
@@ -725,15 +782,36 @@ function selectQtyMeal(meal) {
     const btn = document.getElementById('qty-meal-' + m);
     if (btn) btn.className = (m === meal) ? 'btn-add' : 'btn-sec';
   });
-  const lblEl = document.getElementById('qty-meal-label');
-  if (lblEl) lblEl.textContent = meal.charAt(0).toUpperCase() + meal.slice(1);
+  
+  const formattedMeal = meal.charAt(0).toUpperCase() + meal.slice(1);
+  const actionBtn = document.getElementById('qty-action-btn');
+  if (actionBtn) {
+    if (editingMeal) {
+      actionBtn.innerHTML = `Update in <span id="qty-meal-label">${formattedMeal}</span>`;
+    } else {
+      actionBtn.innerHTML = `Add to <span id="qty-meal-label">${formattedMeal}</span>`;
+    }
+  }
 }
 
 function confirmAddFood(){
   const d=getTodayData();
   const entry={name:currentFood.name,icon:currentFood.icon||'utensils',cal:Math.round(currentFood.cal*currentQty),prot:Math.round(currentFood.prot*currentQty*10)/10,carb:Math.round(currentFood.carb*currentQty*10)/10,fat:Math.round(currentFood.fat*currentQty*10)/10,qty:currentQty,serving:currentFood.serving,time:timeStr()};
-  if(editingMeal){d.meals[editingMeal.type][editingMeal.index]=entry;showToast(`Updated ${entry.name}`);editingMeal=null;}
-  else{d.meals[selectedQtyMeal].push(entry);showToast(`✅ Added ${entry.name}`);}
+  
+  if (editingMeal) {
+    if (editingMeal.type === selectedQtyMeal) {
+       d.meals[editingMeal.type][editingMeal.index] = entry;
+    } else {
+       d.meals[editingMeal.type].splice(editingMeal.index, 1);
+       d.meals[selectedQtyMeal].push(entry);
+    }
+    showToast(`Updated ${entry.name}`);
+    editingMeal = null;
+  } else {
+    d.meals[selectedQtyMeal].push(entry);
+    showToast(`✅ Added ${entry.name}`);
+  }
+  
   save(); closeQtyModal(); closeFoodModal();
   vibrate([10,20,10]);
   renderNutrition(); renderHome();
@@ -742,19 +820,29 @@ function confirmAddFood(){
 // ==================== SMART FOOD ENGINE & AI ====================
 
 const FOOD_ENGINE = [
-  { keywords: ["rice", "white rice", "brown rice", "cooked rice", "dish"], name: "Steamed Rice", cal: 206, prot: 4, carb: 45, fat: 0.4, serving: "1 cup" },
-  { keywords: ["curry", "stew", "soup", "chana", "lentil", "sauce", "bowl"], name: "Dal Tadka", cal: 200, prot: 12, carb: 28, fat: 6, serving: "1 bowl" },
-  { keywords: ["paneer", "cheese", "curd", "tofu"], name: "Paneer (Cottage Cheese)", cal: 265, prot: 18, carb: 2, fat: 20, serving: "100g" },
-  { keywords: ["chicken", "meat", "poultry", "fry", "broiled"], name: "Chicken Breast", cal: 165, prot: 31, carb: 0, fat: 3.6, serving: "100g" },
-  { keywords: ["egg", "boiled egg", "omelette", "scrambled", "yolk", "round", "oval"], name: "Egg (Boiled)", cal: 77, prot: 6, carb: 0.6, fat: 5, serving: "1 large egg" },
-  { keywords: ["banana", "fruit", "yellow"], name: "Banana", cal: 89, prot: 1.1, carb: 23, fat: 0.3, serving: "1 medium" },
-  { keywords: ["apple", "fruit", "granny smith", "red", "round"], name: "Apple", cal: 52, prot: 0.3, carb: 14, fat: 0.2, serving: "1 medium" },
-  { keywords: ["tomato", "vegetable", "red fruit", "salad", "red", "round", "berry"], name: "Tomato", cal: 18, prot: 0.9, carb: 4, fat: 0.2, serving: "1 medium" },
-  { keywords: ["bread", "roti", "chapati", "flatbread", "wheat", "loaf", "bun", "bakery"], name: "Roti (Whole Wheat)", cal: 120, prot: 4, carb: 25, fat: 1, serving: "1 roti" },
-  { keywords: ["tea", "chai", "coffee", "cup", "beverage", "mug"], name: "Masala Chai (with milk)", cal: 65, prot: 2, carb: 9, fat: 2, serving: "1 cup" },
-  { keywords: ["salad", "spinach", "leafy green", "vegetable", "lettuce"], name: "Spinach", cal: 23, prot: 3, carb: 4, fat: 0.4, serving: "100g" },
-  { keywords: ["fish", "seafood", "salmon", "tuna"], name: "Fish (Rohu)", cal: 97, prot: 17, carb: 0, fat: 2.5, serving: "100g" },
-  { keywords: ["biryani", "rice dish", "fried rice", "pilaf"], name: "Mutton Biryani", cal: 450, prot: 22, carb: 52, fat: 15, serving: "1 plate" }
+  { name: "Steamed Rice", cal: 206, prot: 4, carb: 45, fat: 0.4, serving: "1 cup", tags: ["veg", "indian", "staple"], mealType: ["lunch", "dinner"], keywords: ["rice", "white rice", "brown rice", "cooked rice", "dish", "pilaf", "grain", "bowl"] },
+  { name: "Roti (Whole Wheat)", cal: 120, prot: 4, carb: 25, fat: 1, serving: "1 roti", tags: ["veg", "indian", "staple", "bread"], mealType: ["breakfast", "lunch", "dinner"], keywords: ["bread", "roti", "chapati", "flatbread", "wheat", "loaf", "bun", "bakery"] },
+  { name: "Dal Tadka", cal: 200, prot: 12, carb: 28, fat: 6, serving: "1 bowl", tags: ["veg", "indian", "curry"], mealType: ["lunch", "dinner"], keywords: ["curry", "stew", "soup", "chana", "lentil", "sauce", "bowl", "gravy", "hot pot"] },
+  { name: "Paneer (Cottage Cheese)", cal: 265, prot: 18, carb: 2, fat: 20, serving: "100g", tags: ["veg", "indian", "dairy"], mealType: ["lunch", "dinner"], keywords: ["paneer", "cheese", "curd", "tofu", "dairy", "block"] },
+  { name: "Chicken Curry", cal: 240, prot: 20, carb: 8, fat: 14, serving: "1 serving", tags: ["non-veg", "indian", "curry"], mealType: ["lunch", "dinner"], keywords: ["chicken", "meat", "poultry", "curry", "gravy", "masala", "indian food", "spicy", "stew", "dish"] },
+  { name: "Chicken Breast", cal: 165, prot: 31, carb: 0, fat: 3.6, serving: "100g", tags: ["non-veg", "protein"], mealType: ["lunch", "dinner"], keywords: ["chicken", "meat", "poultry", "fry", "broiled", "grilled"] },
+  { name: "Egg (Boiled)", cal: 77, prot: 6, carb: 0.6, fat: 5, serving: "1 large egg", tags: ["non-veg", "protein", "egg"], mealType: ["breakfast", "snack"], keywords: ["egg", "boiled egg", "omelette", "scrambled", "yolk", "round", "oval"] },
+  { name: "Banana", cal: 89, prot: 1.1, carb: 23, fat: 0.3, serving: "1 medium", tags: ["veg", "fruit"], mealType: ["breakfast", "snack"], keywords: ["banana", "fruit", "yellow", "plantain"] },
+  { name: "Apple", cal: 52, prot: 0.3, carb: 14, fat: 0.2, serving: "1 medium", tags: ["veg", "fruit"], mealType: ["breakfast", "snack"], keywords: ["apple", "fruit", "granny smith", "red", "round", "pome"] },
+  { name: "Tomato", cal: 18, prot: 0.9, carb: 4, fat: 0.2, serving: "1 medium", tags: ["veg", "salad", "vegetable"], mealType: ["lunch", "dinner", "snack"], keywords: ["tomato", "vegetable", "red", "fruit", "salad", "round", "berry"] },
+  { name: "Masala Chai (with milk)", cal: 65, prot: 2, carb: 9, fat: 2, serving: "1 cup", tags: ["veg", "drink"], mealType: ["breakfast", "snack"], keywords: ["tea", "chai", "coffee", "cup", "beverage", "mug", "liquid"] },
+  { name: "Spinach", cal: 23, prot: 3, carb: 4, fat: 0.4, serving: "100g", tags: ["veg", "vegetable"], mealType: ["lunch", "dinner"], keywords: ["salad", "spinach", "leafy green", "vegetable", "lettuce", "greens"] },
+  { name: "Fish (Rohu)", cal: 97, prot: 17, carb: 0, fat: 2.5, serving: "100g", tags: ["non-veg", "seafood"], mealType: ["lunch", "dinner"], keywords: ["fish", "seafood", "salmon", "tuna", "rohu"] },
+  { name: "Mutton Biryani", cal: 450, prot: 22, carb: 52, fat: 15, serving: "1 plate", tags: ["non-veg", "indian", "biryani"], mealType: ["lunch", "dinner"], keywords: ["biryani", "rice dish", "fried rice", "pilaf", "meat", "mutton", "lamb"] },
+  { name: "Aloo Sabzi", cal: 180, prot: 3, carb: 34, fat: 5, serving: "1 serving", tags: ["veg", "indian", "curry"], mealType: ["lunch", "dinner"], keywords: ["potato", "aloo", "sabzi", "curry", "stew", "vegetable dish", "bowl"] },
+  { name: "Sambar", cal: 130, prot: 7, carb: 20, fat: 3, serving: "1 bowl", tags: ["veg", "indian", "soup"], mealType: ["breakfast", "lunch"], keywords: ["sambar", "soup", "stew", "lentil", "bowl", "liquid", "gravy"] },
+  { name: "Idli", cal: 58, prot: 2, carb: 12, fat: 0.4, serving: "1 idli", tags: ["veg", "indian", "breakfast"], mealType: ["breakfast", "snack"], keywords: ["idli", "rice cake", "white", "round", "steamed", "snack"] },
+  { name: "Dosa", cal: 168, prot: 4, carb: 28, fat: 4, serving: "1 plain dosa", tags: ["veg", "indian", "breakfast"], mealType: ["breakfast"], keywords: ["dosa", "crepe", "pancake", "flat", "crispy"] },
+  { name: "Peanut Butter", cal: 188, prot: 8, carb: 6, fat: 16, serving: "2 tbsp", tags: ["veg", "spread"], mealType: ["breakfast", "snack"], keywords: ["peanut butter", "spread", "paste", "jar", "snack"] },
+  { name: "Ice Cream", cal: 207, prot: 3.5, carb: 24, fat: 11, serving: "1 scoop", tags: ["veg", "dessert"], mealType: ["snack", "dinner"], keywords: ["ice cream", "dessert", "sweet", "cone", "bowl", "scoop"] },
+  { name: "Pizza", cal: 266, prot: 11, carb: 33, fat: 10, serving: "1 slice", tags: ["junk", "fast food"], mealType: ["lunch", "dinner"], keywords: ["pizza", "slice", "cheese", "fast food", "baked", "round"] },
+  { name: "Burger", cal: 295, prot: 14, carb: 24, fat: 14, serving: "1 burger", tags: ["junk", "fast food"], mealType: ["lunch", "dinner"], keywords: ["burger", "hamburger", "bun", "sandwich", "fast food"] },
+  { name: "Salad Menu (Mixed)", cal: 150, prot: 5, carb: 20, fat: 7, serving: "1 bowl", tags: ["veg", "salad", "healthy"], mealType: ["lunch", "dinner"], keywords: ["salad", "bowl", "vegetables", "healthy", "greens", "lettuce", "mixed", "raw"] }
 ];
 
 let mobilenetModel = null;
@@ -826,27 +914,18 @@ function handleAiPredictions(predictions) {
   }
   
   const topPred = predictions[0];
-  const topConf = topPred.probability;
-  const confPercent = Math.round(topConf * 100);
+  const confPercent = Math.round(topPred.probability * 100);
   
-  // Format the primary label cleanly
   const generalLabelRaw = topPred.className.split(',')[0];
   const generalLabel = generalLabelRaw.charAt(0).toUpperCase() + generalLabelRaw.slice(1);
   
   let rawLabels = [];
-  let predProbs = {};
   
-  // 1. Multi-Prediction extraction
+  // 1. Multi-Prediction extraction (Top 5 technically covered implicitly by tfjs, but we map all valid)
   predictions.forEach(p => {
     p.className.toLowerCase().split(/[,\s]+/).forEach(w => {
       const cleanWord = w.trim();
-      if (cleanWord) {
-        rawLabels.push(cleanWord);
-        // Map word to its probability for boost calculation later
-        if (!predProbs[cleanWord] || p.probability > predProbs[cleanWord]) {
-           predProbs[cleanWord] = p.probability;
-        }
-      }
+      if (cleanWord) rawLabels.push(cleanWord);
     });
   });
   
@@ -858,7 +937,14 @@ function handleAiPredictions(predictions) {
     return;
   }
 
-  // Section 1: AI Detection (Always visible)
+  // Determine Context For Priority Meal Mapping
+  const hr = new Date().getHours();
+  let contextMeal = 'snack';
+  if (hr >= 6 && hr < 11) contextMeal = 'breakfast';
+  else if (hr >= 11 && hr < 16) contextMeal = 'lunch';
+  else if (hr >= 16 && hr < 22) contextMeal = 'dinner';
+
+  // Section 1: AI Detection Status
   let uiHtml = `
     <div style="text-align:center;margin-bottom:16px;">
       <div style="font-size:18px;font-weight:700;color:var(--text1)">Detected: ${generalLabel}</div>
@@ -866,109 +952,107 @@ function handleAiPredictions(predictions) {
     </div>
   `;
   
-  if (confPercent < 50) {
-    uiHtml += `<div style="text-align:center;color:var(--orange);font-size:13px;margin-bottom:16px">Low confidence detection. Please confirm.</div>`;
+  // UX Warning Handling
+  const isExplicitlyNonFood = BLOCKED_LABELS.some(l => rawLabels.includes(l));
+  let isNonFood = false;
+  let isLowConf = false;
+  
+  if (isExplicitlyNonFood) {
+    isNonFood = true;
+    uiHtml += `
+      <div style="background:rgba(255,159,10,0.1);border:1px solid rgba(255,159,10,0.2);padding:14px;border-radius:var(--radius-sm);text-align:center;margin-bottom:16px">
+        <div style="font-size:14px;font-weight:600;color:var(--orange);margin-bottom:4px">This item may not be food.</div>
+        <div style="font-size:13px;color:var(--text2)">We are not fully sure. Please select the correct food below or search manually.</div>
+      </div>
+    `;
+  } else if (confPercent < 60) {
+    isLowConf = true;
+    uiHtml += `<div style="text-align:center;color:var(--orange);font-size:13px;margin-bottom:16px;background:rgba(255,159,10,0.1);padding:10px;border-radius:var(--radius-sm)">Detection may be inaccurate. Choose the right item.</div>`;
   }
   
   let matches = [];
   
-  // 6. Category Check: Only trigger food engine if not explicitly blocked
-  const isExplicitlyNonFood = BLOCKED_LABELS.some(l => rawLabels.includes(l));
-  
-  if (!isExplicitlyNonFood) {
-    // 3. Learning System Override (High Priority)
-    let learnedFound = false;
-    for (const label of rawLabels) {
-      if (aiLearnedData[label]) {
-        const learnedName = aiLearnedData[label];
-        const learnedFood = FOOD_ENGINE.find(f => f.name === learnedName) || FOODS.find(f => f.name === learnedName);
-        if (learnedFood && !matches.find(m => m.name === learnedFood.name)) {
-          matches.push({...learnedFood, score: 1000}); 
-          learnedFound = true;
-        }
-      }
-    }
+  // Smart Scoring matching logic
+  FOOD_ENGINE.forEach(food => {
+    let score = 0;
     
-    const isFruitOrBerry = rawLabels.some(l => l.includes('berry') || l.includes('fruit') || l.includes('round'));
-
-    // 2. Advanced Scoring Engine & Context Intelligence
-    FOOD_ENGINE.forEach(food => {
-      if (matches.find(m => m.name === food.name)) return;
-      let score = 0;
-      let maxBaseProb = 0;
-      
-      if (isFruitOrBerry && food.keywords.some(k => k === 'fruit' || k === 'round' || k === 'berry' || k === 'apple' || k === 'tomato')) {
-        score += 0.4;
-      }
-
-      food.keywords.forEach(kw => {
-        if (rawLabels.includes(kw)) {
-          score += 1;
-          maxBaseProb = Math.max(maxBaseProb, predProbs[kw] || 0);
-        } else if (rawLabels.some(rl => rl.includes(kw) || kw.includes(rl))) {
-          score += 0.5;
-          const pMatch = rawLabels.find(rl => rl.includes(kw) || kw.includes(rl));
-          maxBaseProb = Math.max(maxBaseProb, predProbs[pMatch] || 0);
-        }
-      });
-
-      if (score > 0) {
-        // Confidence Boost
-        score += (maxBaseProb * 0.5);
-        
-        // Context: Recent Selections
-        if (aiRecentSelections.includes(food.name)) {
-          score += 0.3;
-        }
-        
-        // Context: Meal Type
-        const mType = currentMealType; 
-        const breakfastFoods = ["Egg (Boiled)", "Banana", "Apple", "Milk (Full Cream)", "Oats", "Masala Chai (with milk)"];
-        const lunchDinnerFoods = ["Steamed Rice", "Dal Tadka", "Paneer (Cottage Cheese)", "Chicken Breast", "Roti (Whole Wheat)", "Fish (Rohu)", "Mutton Biryani"];
-        
-        if (mType === 'breakfast' && breakfastFoods.includes(food.name)) score += 0.5;
-        if ((mType === 'lunch' || mType === 'dinner') && lunchDinnerFoods.includes(food.name)) score += 0.5;
-
-        matches.push({...food, score});
+    // Learning User Override
+    rawLabels.forEach(label => {
+      if (aiLearnedData[label] === food.name) {
+        score += 5.0;
       }
     });
 
-    matches.sort((a,b) => b.score - a.score);
+    food.keywords.forEach(kw => {
+      if (rawLabels.includes(kw)) {
+        score += 1.0;
+      } else if (rawLabels.some(rl => rl.includes(kw) || kw.includes(rl))) {
+        score += 0.5;
+      }
+    });
+
+    // Semantic / Synonym matching from category map
+    const tagMatchSynonyms = {
+       "curry": ["gravy", "stew", "hot pot"],
+       "bowl": ["dish", "bowl"],
+       "snack": ["fried", "snack", "crispy"],
+       "vegetable": ["greens", "raw"]
+    };
+    
+    // Process native tags + synonyms
+    if (food.tags) {
+      food.tags.some(tag => {
+         if (rawLabels.includes(tag)) score += 0.3;
+         if (tagMatchSynonyms[tag]) {
+            tagMatchSynonyms[tag].forEach(syn => {
+               if (rawLabels.some(rl => rl.includes(syn))) score += 0.3;
+            });
+         }
+      });
+    }
+
+    if (score > 0 || isNonFood) { // Allow matching even if nonfood so we deliver fallbacks
+      if (food.mealType && food.mealType.includes(contextMeal)) score += 0.3;
+      if (aiRecentSelections.includes(food.name)) score += 0.2;
+      matches.push({...food, score});
+    }
+  });
+
+  matches.sort((a,b) => b.score - a.score);
+  
+  // Smart Fallback
+  if (matches.length === 0 || matches[0].score === 0) {
+    matches = [FOOD_ENGINE[0], FOOD_ENGINE[3], FOOD_ENGINE[6], FOOD_ENGINE[7]].map(m => ({...m, score: 0}));
+  } else {
     matches = matches.slice(0, 4);
   }
 
-  // Section 2: Food Suggestions / Non-Food Response
+  // Section 3: Food Suggestions
   if (matches.length > 0) {
-    // 6. FAST PATH (SMART AUTO ADD)
-    if (topConf > 0.75 && matches[0].score >= 1.5) {
+    // Fast path override
+    if (confPercent > 75 && matches[0].score >= 1.5 && !isNonFood && !isLowConf) {
         selectAiFood(matches[0].name, true);
         return;
     }
 
-    uiHtml += `<div style="font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em">Food Suggestions</div>`;
+    uiHtml += `<div style="font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em">Suggested Foods</div>`;
     uiHtml += matches.map((m, idx) => `
-      <div class="food-opt" style="background:var(--bg3);border-radius:var(--radius-sm);margin-bottom:8px;padding:12px;border:1px solid ${idx === 0 ? 'var(--blue)' : 'var(--sep)'};display:flex;justify-content:space-between;align-items:center;" onclick="selectAiFood('${m.name}')">
+      <div class="food-opt" style="background:var(--bg3);border-radius:var(--radius-sm);margin-bottom:8px;padding:12px;border:1px solid ${idx === 0 && !isNonFood ? 'var(--blue)' : 'var(--sep)'};display:flex;justify-content:space-between;align-items:center;" onclick="selectAiFood('${m.name}')">
         <div>
           <div style="font-weight:600;font-size:15px;color:var(--text1)">${m.name}</div>
           <div style="font-size:12px;color:var(--text2);margin-top:2px">${m.cal} kcal · ${m.prot}g P</div>
-          ${idx === 0 ? `<div style="font-size:10px;color:var(--blue);font-weight:700;margin-top:4px;text-transform:uppercase">★ Recommended</div>` : ''}
+          ${idx === 0 && !isNonFood && m.score > 0 ? `<div style="font-size:10px;color:var(--blue);font-weight:700;margin-top:4px;text-transform:uppercase">★ Recommended</div>` : ''}
         </div>
         <button class="btn-add" style="padding:8px 12px;font-size:13px">Add</button>
       </div>
     `).join('');
-  } else {
-    // 3. HANDLE NON-FOOD CASES SMARTLY
-    uiHtml += `
-      <div style="background:rgba(255,159,10,0.1);border:1px solid rgba(255,159,10,0.2);padding:14px;border-radius:var(--radius-sm);text-align:center;margin-bottom:16px">
-        <div style="font-size:14px;font-weight:600;color:var(--orange);margin-bottom:4px">Non-Food Detected</div>
-        <div style="font-size:13px;color:var(--text2)">This item is not recognized as food.</div>
-      </div>
-    `;
   }
 
-  // 7. UX Improvement: Persistent Clean Fallbacks
-  uiHtml += `<div style="margin-top:16px;font-size:13px;color:var(--text3);text-align:center">Detection is approximate. Please confirm.</div>`;
-  uiHtml += `<button class="btn-sec" style="width:100%;margin-top:12px" onclick="fallbackToSearch()">Search Manually</button>`;
+  // Section 4: Standard Outlets
+  uiHtml += `<div style="margin-top:16px;display:flex;gap:10px">`;
+  uiHtml += `<button class="btn-sec" style="flex:1" onclick="fallbackToSearch()">Search Manually</button>`;
+  uiHtml += `<button class="btn-sec" style="flex:1;border:1.5px dashed var(--orange)" onclick="fallbackToSearch(); openCustomFoodModal();">Add Custom</button>`;
+  uiHtml += `</div>`;
 
   document.getElementById('ai-result').innerHTML = uiHtml;
   document.getElementById('ai-result').style.display = 'block';
@@ -1004,6 +1088,11 @@ function selectAiFood(foodName, autoAdd = false) {
     if (autoAdd) {
       currentFood = baseFood;
       currentQty = 1; // Default
+      const hr = new Date().getHours();
+      if (hr < 11) selectedQtyMeal = 'breakfast';
+      else if (hr < 16) selectedQtyMeal = 'lunch';
+      else if (hr < 21) selectedQtyMeal = 'dinner';
+      else selectedQtyMeal = 'snack';
       confirmAddFood();
       showToast('⚡ Auto-logged: ' + baseFood.name);
     } else {
@@ -1073,10 +1162,11 @@ function renderNutrition(){
   const mealIcons={breakfast:'sun',lunch:'sun',dinner:'moon',snack:'apple'};
   document.getElementById('nutr-meal-list').innerHTML=['breakfast','lunch','dinner','snack'].map(m=>{
     const items=d.meals[m]||[];
-    if(!items.length) return '';
-    return `<div class="meal-section"><div class="meal-hdr">${getIcon(mealIcons[m])} ${m.charAt(0).toUpperCase()+m.slice(1)}</div>
-    <div class="card" style="padding:0 18px">
-      ${items.map((f,i)=>`<div class="meal-item">
+    let itemsHtml;
+    if(!items.length) {
+      itemsHtml = `<div style="text-align:center;padding:20px 0;color:var(--text3);font-size:13px;font-weight:500;">No items added yet</div>`;
+    } else {
+      itemsHtml = items.map((f,i)=>`<div class="meal-item">
         <div class="meal-icon" style="background:var(--bg4)">${getIcon(f.icon||'utensils')}</div>
         <div class="meal-info"><div class="meal-name">${f.name} ×${f.qty}</div><div class="meal-macro">${f.prot}g P · ${f.carb}g C · ${f.fat}g F</div></div>
         <div style="display:flex;align-items:center;gap:8px">
@@ -1084,8 +1174,15 @@ function renderNutrition(){
           <div class="meal-action edit" onclick="editMeal('${m}',${i})">${getIcon('pencil','',16)}</div>
           <div class="meal-action del" onclick="removeMeal('${m}',${i})">${getIcon('trash','',16)}</div>
         </div>
-      </div>`).join('')}
-    </div></div>`;
+      </div>`).join('');
+    }
+    
+    return `<div class="meal-section">
+      <div class="meal-hdr">${getIcon(mealIcons[m])} ${m.charAt(0).toUpperCase()+m.slice(1)}</div>
+      <div class="card" style="padding:0 18px">
+        ${itemsHtml}
+      </div>
+    </div>`;
   }).join('');
 }
 

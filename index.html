@@ -222,10 +222,49 @@
           </div>
 
           <!-- Distance / Calorie Stats -->
+          <style>
+            .smooth-marker {
+              transition: margin 0.5s linear, transform 0.5s linear;
+            }
+
+            .route-stat-row {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 10px;
+              margin-bottom: 16px;
+              background: var(--bg2);
+              padding: 12px;
+              border-radius: var(--radius-sm);
+            }
+
+            .route-stat {
+              text-align: center;
+            }
+
+            .route-stat-val {
+              font-size: 14px;
+              font-weight: 700;
+            }
+
+            .route-stat-label {
+              font-size: 10px;
+              color: var(--text3);
+              margin-top: 2px;
+              text-transform: uppercase;
+            }
+          </style>
           <div class="route-stat-row">
             <div class="route-stat">
               <div class="route-stat-val" id="map-dist" style="color:var(--blue)">0.00 km</div>
               <div class="route-stat-label">Distance</div>
+            </div>
+            <div class="route-stat">
+              <div class="route-stat-val" id="map-time" style="color:var(--text1)">00:00</div>
+              <div class="route-stat-label">Time</div>
+            </div>
+            <div class="route-stat">
+              <div class="route-stat-val" id="map-speed" style="color:var(--cyan)">0.0 km/h</div>
+              <div class="route-stat-label">Avg Speed</div>
             </div>
             <div class="route-stat">
               <div class="route-stat-val" id="map-kcal" style="color:var(--orange)">0 kcal</div>
@@ -234,6 +273,11 @@
           </div>
 
           <!-- Controls -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <label style="font-size:13px;color:var(--text2);display:flex;align-items:center;gap:6px;font-weight:500;">
+              <input type="checkbox" id="map-follow-toggle" checked onchange="toggleMapFollow()"> Auto-follow user
+            </label>
+          </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <button class="btn-add" onclick="toggleLocation()" id="loc-track-btn">📍 Start Tracking</button>
             <button class="btn-sec" onclick="clearRoute()">🗑 Clear Route</button>
@@ -525,7 +569,7 @@
         <button class="btn-sec" style="flex:1;font-size:13px;padding:10px" onclick="selectQtyMeal('snack')"
           id="qty-meal-snack">Snack</button>
       </div>
-      <button class="btn-add" style="width:100%" onclick="confirmAddFood()">Add to <span
+      <button class="btn-add" style="width:100%" id="qty-action-btn" onclick="confirmAddFood()">Add to <span
           id="qty-meal-label">Meal</span></button>
     </div>
   </div>
