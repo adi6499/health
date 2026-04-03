@@ -2,608 +2,581 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#000000">
-    <title>Healthify Pro</title>
-    <!-- Premium Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
-    <style>
-        body {
-            font-family: 'Outfit', sans-serif;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Healthify Pro">
+  <meta name="description" content="Premium health and fitness tracker — nutrition, steps, workouts, hydration.">
+  <title>Healthify Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
 </head>
 
 <body>
 
-    <div id="root">
-        <div class="views">
+  <div id="root">
+    <div class="views">
 
-            <!-- HOME -->
-            <div id="view-home" class="view active">
-                <div class="hdr anim">
-                    <div class="hdr-sub" id="hdr-date">Friday, 3 April</div>
-                    <div class="hdr-title lg">Summary</div>
-                </div>
+      <!-- HOME -->
+      <div id="view-home" class="view active">
+        <div class="hdr anim">
+          <div class="hdr-sub" id="hdr-date">Today</div>
+          <div class="hdr-title lg">Summary</div>
+        </div>
 
-                <div class="card anim anim-1">
-                    <div class="rings-wrap">
-                        <div class="ring-svg-wrap">
-                            <svg class="ring-svg" width="130" height="130" viewBox="0 0 130 130">
-                                <circle class="ring-track" cx="65" cy="65" r="55" stroke="rgba(255,55,95,0.18)" />
-                                <circle class="ring-fill" id="r-move" cx="65" cy="65" r="55" stroke="var(--pink)"
-                                    stroke-dasharray="0 346" />
-                                <circle class="ring-track" cx="65" cy="65" r="40" stroke="rgba(48,209,88,0.18)" />
-                                <circle class="ring-fill" id="r-exer" cx="65" cy="65" r="40" stroke="var(--green)"
-                                    stroke-dasharray="0 251" />
-                                <circle class="ring-track" cx="65" cy="65" r="25" stroke="rgba(50,210,255,0.18)" />
-                                <circle class="ring-fill" id="r-stand" cx="65" cy="65" r="25" stroke="var(--cyan)"
-                                    stroke-dasharray="0 157" />
-                            </svg>
-                        </div>
-                        <div class="ring-labels">
-                            <div class="ring-row">
-                                <div class="ring-name" style="color:var(--pink)">MOVE</div>
-                                <div class="ring-val" style="color:var(--pink)" id="ring-move-val">0</div>
-                                <div class="ring-goal" id="ring-move-goal">of 500 kcal</div>
-                            </div>
-                            <div class="ring-row">
-                                <div class="ring-name" style="color:var(--green)">EXERCISE</div>
-                                <div class="ring-val" style="color:var(--green)" id="ring-exer-val">0</div>
-                                <div class="ring-goal" id="ring-exer-goal">of 30 min</div>
-                            </div>
-                            <div class="ring-row">
-                                <div class="ring-name" style="color:var(--cyan)">STAND</div>
-                                <div class="ring-val" style="color:var(--cyan)" id="ring-stand-val">0</div>
-                                <div class="ring-goal">of 12 hr</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="score-card anim anim-2">
-                    <div class="score-badge">
-                        <div id="score-icon"></div><span>Health Score</span>
-                    </div>
-                    <div class="score-num" id="home-score">—</div>
-                    <div class="score-tip" id="home-tip">Complete your profile to get a personalised score.</div>
-                </div>
-
-                <div class="dash-grid anim anim-3">
-                    <div class="dash-card" onclick="switchTab('nutrition')">
-                        <div class="dash-icon" id="home-icon-cals"></div>
-                        <div class="dash-val" id="home-cals" style="color:var(--orange)">0</div>
-                        <div class="dash-label">Calories today</div>
-                    </div>
-                    <div class="dash-card" onclick="switchTab('fitness')">
-                        <div class="dash-icon" id="home-icon-steps"></div>
-                        <div class="dash-val" id="home-steps" style="color:var(--green)">0</div>
-                        <div class="dash-label">Steps today</div>
-                    </div>
-                    <div class="dash-card" onclick="switchTab('nutrition')">
-                        <div class="dash-icon" id="home-icon-water"></div>
-                        <div class="dash-val" id="home-water" style="color:var(--cyan)">0</div>
-                        <div class="dash-label">Water (ml)</div>
-                    </div>
-                    <div class="dash-card" onclick="switchTab('progress')">
-                        <div class="dash-icon" id="home-icon-streak"></div>
-                        <div class="dash-val" id="home-streak" style="color:var(--purple)">0</div>
-                        <div class="dash-label">Day streak</div>
-                    </div>
-                </div>
-
-                <div class="sec-hdr anim anim-4">
-                    <h2>Today's Meals</h2>
-                    <a onclick="openAddFood()">+ Add</a>
-                </div>
-                <div class="card anim anim-4" id="home-meals-preview"></div>
+        <div class="card anim anim-1">
+          <div class="rings-wrap">
+            <div class="ring-svg-wrap">
+              <svg class="ring-svg" width="130" height="130" viewBox="0 0 130 130">
+                <circle class="ring-track" cx="65" cy="65" r="55" stroke="rgba(255,55,95,0.18)" />
+                <circle class="ring-fill" id="r-move" cx="65" cy="65" r="55" stroke="var(--pink)" stroke-dasharray="0 346" />
+                <circle class="ring-track" cx="65" cy="65" r="40" stroke="rgba(48,209,88,0.18)" />
+                <circle class="ring-fill" id="r-exer" cx="65" cy="65" r="40" stroke="var(--green)" stroke-dasharray="0 251" />
+                <circle class="ring-track" cx="65" cy="65" r="25" stroke="rgba(50,210,255,0.18)" />
+                <circle class="ring-fill" id="r-stand" cx="65" cy="65" r="25" stroke="var(--cyan)" stroke-dasharray="0 157" />
+              </svg>
             </div>
-
-            <!-- NUTRITION -->
-            <div id="view-nutrition" class="view">
-                <div class="hdr">
-                    <div class="hdr-sub" id="nutr-date">Today</div>
-                    <div class="hdr-title">Nutrition</div>
-                </div>
-
-                <div class="card anim">
-                    <div class="cal-display">
-                        <div class="cal-big" id="nutr-cals">0</div>
-                        <div class="cal-sub">of <span id="nutr-cal-goal">2000</span> kcal · <span
-                                id="nutr-remaining">2000</span> remaining</div>
-                    </div>
-                    <div class="bar-track" style="height:8px;border-radius:8px;margin:14px 0;">
-                        <div class="bar-fill" id="cal-bar"
-                            style="background:linear-gradient(90deg,var(--orange),var(--pink));width:0%;height:8px;border-radius:8px;">
-                        </div>
-                    </div>
-                    <div class="macro-bars">
-                        <div class="macro-row">
-                            <div class="macro-label"><span class="macro-name" style="color:#fffacd;">Protein</span><span
-                                    class="macro-nums"><span id="nutr-prot">0</span>g / <span
-                                        id="nutr-prot-goal">150</span>g</span></div>
-                            <div class="bar-track">
-                                <div class="bar-fill" id="bar-prot" style="background:var(--pink);width:0%;"></div>
-                            </div>
-                        </div>
-                        <div class="macro-row">
-                            <div class="macro-label"><span class="macro-name"
-                                    style="color:var(--orange);">Carbs</span><span class="macro-nums"><span
-                                        id="nutr-carb">0</span>g / <span id="nutr-carb-goal">250</span>g</span></div>
-                            <div class="bar-track">
-                                <div class="bar-fill" id="bar-carb" style="background:var(--orange);width:0%;"></div>
-                            </div>
-                        </div>
-                        <div class="macro-row">
-                            <div class="macro-label"><span class="macro-name" style="color:#adf;"> Fat</span><span
-                                    class="macro-nums"><span id="nutr-fat">0</span>g / <span
-                                        id="nutr-fat-goal">65</span>g</span></div>
-                            <div class="bar-track">
-                                <div class="bar-fill" id="bar-fat" style="background:var(--blue);width:0%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card anim anim-1">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-                        <div style="font-size:17px;font-weight:700;">Hydration</div>
-                        <div style="font-size:13px;color:var(--cyan);font-weight:600;" id="water-ml">0 / 2500 ml</div>
-                    </div>
-                    <div class="water-dots" id="water-dots" style="flex-wrap:wrap;gap:8px;"></div>
-                    <button class="btn-add" style="width:100%;margin-top:14px;" onclick="addWater()">
-                        <div class="btn-icon-droplet"></div> Add 250 ml
-                    </button>
-                </div>
-
-                <div style="padding:0 16px 14px;display:flex;gap:10px;">
-                    <button class="btn-add" style="flex:1;" onclick="openAddFood()">
-                        <div class="btn-icon-plus"></div> Log Food
-                    </button>
-                    <button class="btn-sec" style="flex:1;" onclick="openScanner()">
-                        <div class="btn-icon-camera"></div> Scan
-                    </button>
-                </div>
-
-                <div id="nutr-meal-list"></div>
+            <div class="ring-labels">
+              <div class="ring-row">
+                <div class="ring-name" style="color:var(--pink)">MOVE</div>
+                <div class="ring-val" style="color:var(--pink)" id="ring-move-val">0</div>
+                <div class="ring-goal" id="ring-move-goal">of 500 kcal</div>
+              </div>
+              <div class="ring-row">
+                <div class="ring-name" style="color:var(--green)">EXERCISE</div>
+                <div class="ring-val" style="color:var(--green)" id="ring-exer-val">0</div>
+                <div class="ring-goal" id="ring-exer-goal">of 30 min</div>
+              </div>
+              <div class="ring-row">
+                <div class="ring-name" style="color:var(--cyan)">STAND</div>
+                <div class="ring-val" style="color:var(--cyan)" id="ring-stand-val">0</div>
+                <div class="ring-goal">of 12 hr</div>
+              </div>
             </div>
+          </div>
+        </div>
 
-            <!-- FITNESS -->
-            <div id="view-fitness" class="view">
-                <div class="hdr">
-                    <div class="hdr-sub">Activity</div>
-                    <div class="hdr-title">Fitness</div>
-                </div>
+        <div class="score-card anim anim-2">
+          <div class="score-badge">
+            <div id="score-icon"></div><span>Health Score</span>
+          </div>
+          <div class="score-num" id="home-score">—</div>
+          <div class="score-tip" id="home-tip">Complete your profile to get a personalised score.</div>
+        </div>
 
-                <div class="card anim" style="text-align:center;padding:28px;">
-                    <div
-                        style="font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">
-                        Real-Time Steps</div>
-                    <div class="step-big" id="fit-steps">0</div>
-                    <div style="font-size:15px;color:var(--text2);margin:8px 0 16px;" id="fit-cals-burned">0 kcal burned
-                        · 0.0 km</div>
-                    <div id="pedometer-status"
-                        style="display:inline-block;background:var(--bg4);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:16px;">
-                        SENSORS INACTIVE</div>
-                    <div style="display:flex;gap:10px;">
-                        <button class="btn-add" style="flex:1;" id="sensor-btn" onclick="requestPedometer()">
-                            <div class="btn-icon-satellite"></div> Enable Sensors
-                        </button>
-                        <button class="btn-sec" style="flex:1;" onclick="openManualActivity()">
-                            <div class="btn-icon-pencil"></div> Log Manual
-                        </button>
-                    </div>
-                </div>
+        <!-- Smart Insight Banner -->
+        <div id="insight-banner" class="insights-banner anim anim-2" style="display:none"></div>
 
-                <div class="sec-hdr anim anim-1">
-                    <h2>Quick Workouts</h2>
-                </div>
-                <div class="card anim anim-1" id="workout-list"></div>
+        <div class="dash-grid anim anim-3">
+          <div class="dash-card" onclick="switchTab('nutrition')">
+            <div class="dash-icon" id="home-icon-cals"></div>
+            <div class="dash-val" id="home-cals" style="color:var(--orange)">0</div>
+            <div class="dash-label">Calories today</div>
+          </div>
+          <div class="dash-card" onclick="switchTab('fitness')">
+            <div class="dash-icon" id="home-icon-steps"></div>
+            <div class="dash-val" id="home-steps" style="color:var(--green)">0</div>
+            <div class="dash-label">Steps today</div>
+          </div>
+          <div class="dash-card" onclick="switchTab('nutrition')">
+            <div class="dash-icon" id="home-icon-water"></div>
+            <div class="dash-val" id="home-water" style="color:var(--cyan)">0</div>
+            <div class="dash-label">Water (ml)</div>
+          </div>
+          <div class="dash-card" onclick="switchTab('progress')">
+            <div class="dash-icon" id="home-icon-streak"></div>
+            <div class="dash-val" id="home-streak" style="color:var(--purple)">0</div>
+            <div class="dash-label">Day streak</div>
+          </div>
+        </div>
 
-                <div class="sec-hdr anim anim-2">
-                    <h2>Recent Activity</h2>
-                </div>
-                <div class="card anim anim-2" id="recent-workouts"></div>
+        <div class="sec-hdr anim anim-4">
+          <h2>Today's Meals</h2>
+          <a onclick="openAddFood()">+ Add</a>
+        </div>
+        <div class="card anim anim-4" id="home-meals-preview"></div>
+
+        <!-- Save Dashboard as Image -->
+        <div style="padding:0 16px 20px">
+          <button class="btn-sec" style="width:100%" onclick="saveAsImage('view-home')">
+            <div class="btn-icon-share" style="display:flex;align-items:center"></div>
+            Share Summary
+          </button>
+        </div>
+      </div>
+
+      <!-- NUTRITION -->
+      <div id="view-nutrition" class="view">
+        <div class="hdr">
+          <div class="hdr-sub" id="nutr-date">Today</div>
+          <div class="hdr-title">Nutrition</div>
+        </div>
+
+        <div class="card anim">
+          <div class="cal-display">
+            <div class="cal-big" id="nutr-cals">0</div>
+            <div class="cal-sub">of <span id="nutr-cal-goal">2000</span> kcal · <span id="nutr-remaining">2000</span> remaining</div>
+          </div>
+          <div class="bar-track" style="height:8px;border-radius:8px;margin:14px 0">
+            <div class="bar-fill" id="cal-bar" style="background:linear-gradient(90deg,var(--orange),var(--pink));width:0%;height:8px;border-radius:8px"></div>
+          </div>
+          <div class="macro-bars">
+            <div class="macro-row">
+              <div class="macro-label">
+                <span class="macro-name" style="color:#fffacd">Protein</span>
+                <span class="macro-nums"><span id="nutr-prot">0</span>g / <span id="nutr-prot-goal">150</span>g</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill" id="bar-prot" style="background:var(--pink);width:0%"></div></div>
             </div>
-
-            <!-- PROGRESS -->
-            <div id="view-progress" class="view">
-                <div class="hdr">
-                    <div class="hdr-sub">Analytics</div>
-                    <div class="hdr-title">Progress</div>
-                </div>
-
-                <div class="stat-row anim" style="padding:0 16px 14px;">
-                    <div class="stat-mini">
-                        <div class="stat-mini-label">Avg Calories</div>
-                        <div class="stat-mini-val" id="prog-avg-cal" style="color:var(--orange)">—</div>
-                    </div>
-                    <div class="stat-mini">
-                        <div class="stat-mini-label">Avg Protein</div>
-                        <div class="stat-mini-val" id="prog-avg-prot" style="color:var(--pink)">—</div>
-                    </div>
-                    <div class="stat-mini">
-                        <div class="stat-mini-label">Water (avg)</div>
-                        <div class="stat-mini-val" id="prog-avg-water" style="color:var(--cyan)">—</div>
-                    </div>
-                    <div class="stat-mini">
-                        <div class="stat-mini-label">Workouts</div>
-                        <div class="stat-mini-val" id="prog-workouts" style="color:var(--purple)">—</div>
-                    </div>
-                </div>
-
-                <div class="card anim anim-1">
-                    <div style="font-size:17px;font-weight:700;margin-bottom:14px;">7-Day Calories</div>
-                    <div class="chart-wrap"><canvas id="cal-chart"></canvas></div>
-                </div>
-                <div class="card anim anim-2">
-                    <div style="font-size:17px;font-weight:700;margin-bottom:14px;">Protein Intake</div>
-                    <div class="chart-wrap"><canvas id="prot-chart"></canvas></div>
-                </div>
-                <div class="card anim anim-3">
-                    <div style="font-size:17px;font-weight:700;margin-bottom:14px;">Weight Trend (kg)</div>
-                    <div class="chart-wrap"><canvas id="weight-chart"></canvas></div>
-                    <button class="btn-sec" style="width:100%;margin-top:12px;" onclick="logWeight()">+ Log Today's
-                        Weight</button>
-                </div>
+            <div class="macro-row">
+              <div class="macro-label">
+                <span class="macro-name" style="color:var(--orange)">Carbs</span>
+                <span class="macro-nums"><span id="nutr-carb">0</span>g / <span id="nutr-carb-goal">250</span>g</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill" id="bar-carb" style="background:var(--orange);width:0%"></div></div>
             </div>
-
-            <!-- PROFILE -->
-            <div id="view-profile" class="view">
-                <div class="hdr">
-                    <div class="hdr-sub">Account</div>
-                    <div class="hdr-title">Profile</div>
-                </div>
-
-                <div class="card anim" style="text-align:center;padding:24px;">
-                    <div class="profile-avatar" id="prof-avatar"
-                        style="background:linear-gradient(135deg,var(--blue),var(--purple));">?</div>
-                    <div class="profile-name" id="prof-name">Your Name</div>
-                    <div class="profile-sub" id="prof-goal-label">Goal not set</div>
-                    <button class="btn-add" style="margin-top:16px;width:100%;" onclick="showOnboarding()">
-                        <div class="btn-icon-pencil"></div> Edit Profile
-                    </button>
-                </div>
-
-                <div class="card anim anim-1">
-                    <div class="list-row">
-                        <div class="list-label"><span id="prof-icon-weight"></span> Weight</div>
-                        <div class="list-val" id="prof-weight-val">— kg <span class="prof-arrow"></span></div>
-                    </div>
-                    <div class="list-row">
-                        <div class="list-label"><span id="prof-icon-height"></span> Height</div>
-                        <div class="list-val" id="prof-height-val">— cm <span class="prof-arrow"></span></div>
-                    </div>
-                    <div class="list-row">
-                        <div class="list-label"><span id="prof-icon-age"></span> Age</div>
-                        <div class="list-val" id="prof-age-val">— yr <span class="prof-arrow"></span></div>
-                    </div>
-                    <div class="list-row">
-                        <div class="list-label"><span id="prof-icon-bmi"></span> BMI</div>
-                        <div class="list-val" id="prof-bmi-val">— <span class="prof-arrow"></span></div>
-                    </div>
-                </div>
-
-                <div class="card anim anim-2">
-                    <div class="list-row">
-                        <div class="list-label">Daily Calorie Goal</div>
-                        <div class="list-val" id="prof-cal-goal" style="color:var(--orange);">2000 kcal</div>
-                    </div>
-                    <div class="list-row">
-                        <div class="list-label">Protein Goal</div>
-                        <div class="list-val" id="prof-prot-goal" style="color:var(--pink);">150 g</div>
-                    </div>
-                    <div class="list-row">
-                        <div class="list-label">Water Goal</div>
-                        <div class="list-val" style="color:var(--cyan);">2500 ml</div>
-                    </div>
-                </div>
-
-                <div class="card anim anim-3"
-                    style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;"
-                    onclick="toggleTheme()">
-                    <div class="list-label"><span id="icon-moon" style="color:var(--purple);"></span> Dark Mode</div>
-                    <div id="theme-toggle"
-                        style="background:var(--blue);width:51px;height:31px;border-radius:16px;position:relative;cursor:pointer;transition:background 0.3s;">
-                        <div style="position:absolute;width:27px;height:27px;background:#fff;border-radius:50%;top:2px;right:2px;transition:right 0.3s;box-shadow:0 2px 4px rgba(0,0,0,0.3);"
-                            id="toggle-knob"></div>
-                    </div>
-                </div>
+            <div class="macro-row">
+              <div class="macro-label">
+                <span class="macro-name" style="color:#adf">Fat</span>
+                <span class="macro-nums"><span id="nutr-fat">0</span>g / <span id="nutr-fat-goal">65</span>g</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill" id="bar-fat" style="background:var(--blue);width:0%"></div></div>
             </div>
+          </div>
+        </div>
 
-        </div><!-- /views -->
+        <div class="card anim anim-1">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <div style="font-size:17px;font-weight:700">Hydration</div>
+            <div style="font-size:13px;color:var(--cyan);font-weight:600" id="water-ml">0 / 2500 ml</div>
+          </div>
+          <div class="water-dots" id="water-dots"></div>
+          <button class="btn-add" style="width:100%;margin-top:14px" onclick="addWater()">
+            <div class="btn-icon-droplet" style="display:flex;align-items:center"></div> Add 250 ml
+          </button>
+        </div>
 
-        <!-- TAB BAR -->
-        <nav class="tab-bar">
-            <div class="tab-item active" id="tab-home" onclick="switchTab('home')">
-                <div class="tab-icon-home"></div><span>Home</span>
-            </div>
-            <div class="tab-item" id="tab-nutrition" onclick="switchTab('nutrition')">
-                <div class="tab-icon-nutrition"></div><span>Nutrition</span>
-            </div>
-            <div class="tab-item" id="tab-fitness" onclick="switchTab('fitness')">
-                <div class="tab-icon-fitness"></div><span>Fitness</span>
-            </div>
-            <div class="tab-item" id="tab-progress" onclick="switchTab('progress')">
-                <div class="tab-icon-progress"></div><span>Progress</span>
-            </div>
-            <div class="tab-item" id="tab-profile" onclick="switchTab('profile')">
-                <div class="tab-icon-profile"></div><span>Profile</span>
-            </div>
-        </nav>
-    </div>
+        <div style="padding:0 16px 14px;display:flex;gap:10px">
+          <button class="btn-add" style="flex:1" onclick="openAddFood()">
+            <div class="btn-icon-plus" style="display:flex;align-items:center"></div> Log Food
+          </button>
+          <button class="btn-sec" style="flex:1" onclick="openScanner()">
+            <div class="btn-icon-camera" style="display:flex;align-items:center"></div> Scan
+          </button>
+        </div>
 
-    <!-- ADD FOOD MODAL -->
-    <div class="modal-backdrop" id="food-modal" onclick="closeFoodModal()">
-        <div class="modal-sheet" onclick="e=>e.stopPropagation()">
-            <div class="modal-handle"></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                <div class="modal-title" style="margin-bottom:0;">Log Food</div>
-                <div onclick="closeFoodModal()" class="close-btn"
-                    style="cursor:pointer;background:var(--bg4);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:400;color:var(--text1);">
-                    ×</div>
+        <div id="nutr-meal-list"></div>
+
+        <!-- Save Nutrition as Image -->
+        <div style="padding:0 16px 20px">
+          <button class="btn-sec" style="width:100%" onclick="saveAsImage('view-nutrition')">
+            Save Daily Log as Image
+          </button>
+        </div>
+      </div>
+
+      <div id="view-fitness" class="view">
+        <div class="hdr">
+          <div class="hdr-sub">Activity Tracking</div>
+          <div class="hdr-title">Fitness</div>
+        </div>
+
+        <!-- MAP SECTION -->
+        <div class="card anim" style="padding:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div style="font-size:17px;font-weight:700">Route Tracker</div>
+            <div class="pedometer-badge inactive" id="map-status" style="margin:0">TRACKING STOPPED</div>
+          </div>
+
+          <!-- Map renders here; placeholder shown until tracking starts -->
+          <div id="map-container">
+            <div class="map-placeholder">
+              <div style="font-size:36px">🗺️</div>
+              <div>Enable Location Tracking to see your route</div>
+              <div style="font-size:12px;color:var(--text3)">Uses OpenStreetMap — no API key required</div>
             </div>
-            <div style="display:flex;gap:8px;margin-bottom:12px;">
-                <button class="btn-add" style="flex:1;font-size:13px;" onclick="setMealType('breakfast')"
-                    id="meal-btn-breakfast">🌅 Breakfast</button>
-                <button class="btn-sec" style="flex:1;font-size:13px;" onclick="setMealType('lunch')"
-                    id="meal-btn-lunch">☀️ Lunch</button>
-                <button class="btn-sec" style="flex:1;font-size:13px;" onclick="setMealType('dinner')"
-                    id="meal-btn-dinner">🌙 Dinner</button>
-                <button class="btn-sec" style="flex:1;font-size:13px;" onclick="setMealType('snack')"
-                    id="meal-btn-snack">🍎 Snack</button>
+          </div>
+
+          <!-- Distance / Calorie Stats -->
+          <div class="route-stat-row">
+            <div class="route-stat">
+              <div class="route-stat-val" id="map-dist" style="color:var(--blue)">0.00 km</div>
+              <div class="route-stat-label">Distance</div>
             </div>
-            <input class="food-search" id="food-search" placeholder="Search food (e.g. Rice, Dal, Chicken…)"
-                oninput="filterFoods(this.value)">
-            <button class="btn-sec"
-                style="width:100%;margin-bottom:12px;border:1.5px dashed var(--sep);background:transparent;"
-                onclick="openCustomFoodModal()">
-                <span style="font-size:18px;margin-right:8px;">+</span> Add Custom Food
+            <div class="route-stat">
+              <div class="route-stat-val" id="map-kcal" style="color:var(--orange)">0 kcal</div>
+              <div class="route-stat-label">Burned (GPS)</div>
+            </div>
+          </div>
+
+          <!-- Controls -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <button class="btn-add" onclick="toggleLocation()" id="loc-track-btn">📍 Start Tracking</button>
+            <button class="btn-sec"  onclick="clearRoute()">🗑 Clear Route</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:10px">Tracking only works while app is active in foreground</div>
+        </div>
+
+        <!-- PEDOMETER -->
+        <div class="card anim anim-1" style="text-align:center;padding:28px">
+          <div style="font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Pedometer Session</div>
+          <div class="step-big" id="fit-steps">0</div>
+          <div style="font-size:15px;color:var(--text2);margin:8px 0 16px" id="fit-cals-burned">0 kcal burned · 0.0 km</div>
+          <div class="pedometer-badge inactive" id="pedometer-status">TRACKING STOPPED</div>
+          <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:10px;margin-top:10px">
+            <button class="btn-add" id="sensor-btn" onclick="requestPedometer()">
+              <div class="btn-icon-satellite" style="display:flex;align-items:center"></div> Start Tracking
             </button>
-            <div class="food-list" id="food-list"></div>
+            <button class="btn-sec" onclick="logManualSteps()">
+              + Manual
+            </button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:14px">Tracking only works while app is active.</div>
         </div>
-    </div>
 
-    <!-- FOOD QUANTITY MODAL -->
-    <div class="modal-backdrop" id="qty-modal" onclick="e=>e.target===this&&closeQtyModal()">
-        <div class="modal-sheet" onclick="e=>e.stopPropagation()">
-            <div class="modal-handle"></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                <div class="modal-title" id="qty-food-name" style="margin-bottom:0;">Food</div>
-                <div onclick="closeQtyModal()" class="close-btn"
-                    style="cursor:pointer;background:var(--bg4);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:400;color:var(--text1);">
-                    ×</div>
-            </div>
-            <div style="font-size:14px;color:var(--text2);margin-bottom:16px;" id="qty-food-detail"></div>
-            <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px;">SERVINGS</div>
-            <div class="qty-row">
-                <button class="qty-btn" onclick="changeQty(-1)">−</button>
-                <div class="qty-val" id="qty-val">1</div>
-                <button class="qty-btn" onclick="changeQty(1)">+</button>
-            </div>
-            <div style="background:var(--bg3);border-radius:var(--radius-md);padding:14px;margin-bottom:16px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                    <span style="color:var(--text2);font-size:14px;">Calories</span>
-                    <input type="number" id="qty-cals-input" class="ob-input"
-                        style="width:80px;margin:0;padding:4px 8px;text-align:right;font-weight:700;color:var(--orange);"
-                        oninput="updateCustomMacros('cal')">
-                </div>
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                    <span style="color:var(--text2);font-size:14px;">Protein (g)</span>
-                    <input type="number" id="qty-prot-input" class="ob-input"
-                        style="width:80px;margin:0;padding:4px 8px;text-align:right;"
-                        oninput="updateCustomMacros('prot')">
-                </div>
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                    <span style="color:var(--text2);font-size:14px;">Carbs (g)</span>
-                    <input type="number" id="qty-carb-input" class="ob-input"
-                        style="width:80px;margin:0;padding:4px 8px;text-align:right;"
-                        oninput="updateCustomMacros('carb')">
-                </div>
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <span style="color:var(--text2);font-size:14px;">Fat (g)</span>
-                    <input type="number" id="qty-fat-input" class="ob-input"
-                        style="width:80px;margin:0;padding:4px 8px;text-align:right;"
-                        oninput="updateCustomMacros('fat')">
-                </div>
-            </div>
-            <div id="qty-display-static"
-                style="display:none;background:var(--bg3);border-radius:var(--radius-md);padding:14px;margin-bottom:16px;">
-                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                    <span style="color:var(--text2);font-size:14px;">Calories</span><span id="qty-cals"
-                        style="font-weight:700;color:var(--orange);">0 kcal</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                    <span style="color:var(--text2);font-size:14px;">Protein</span><span id="qty-prot"
-                        style="font-weight:600;">0 g</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                    <span style="color:var(--text2);font-size:14px;">Carbs</span><span id="qty-carb"
-                        style="font-weight:600;">0 g</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;">
-                    <span style="color:var(--text2);font-size:14px;">Fat</span><span id="qty-fat"
-                        style="font-weight:600;">0 g</span>
-                </div>
-            </div>
-            <button class="btn-add" style="width:100%;" onclick="confirmAddFood()">Update <span
-                    id="qty-meal-label">Meal</span></button>
+        <div class="sec-hdr anim anim-2"><h2>Quick Workouts</h2></div>
+        <div class="card anim anim-2" id="workout-list"></div>
+
+        <div class="sec-hdr anim anim-3"><h2>Recent Activity</h2></div>
+        <div class="card anim anim-3" id="recent-workouts"></div>
+      </div>
+
+      <!-- PROGRESS -->
+      <div id="view-progress" class="view">
+        <div class="hdr">
+          <div class="hdr-sub">Analytics</div>
+          <div class="hdr-title">Progress</div>
         </div>
-    </div>
 
-    <!-- CUSTOM FOOD MODAL -->
-    <div class="modal-backdrop" id="custom-modal" onclick="closeCustomFoodModal()">
-        <div class="modal-sheet" onclick="e=>e.stopPropagation()">
-            <div class="modal-handle"></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                <div class="modal-title" style="margin-bottom:0;">Custom Food</div>
-                <div onclick="closeCustomFoodModal()" class="close-btn"
-                    style="cursor:pointer;background:var(--bg4);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:400;color:var(--text1);">
-                    ×</div>
-            </div>
-            <div class="ob-label">Food Name</div>
-            <input class="ob-input" id="cf-name" placeholder="e.g. Grandma's Samosa" type="text"
-                style="margin-bottom:12px;">
-            <div class="ob-label">Calories (kcal)</div>
-            <input class="ob-input" id="cf-cals" placeholder="250" type="number" style="margin-bottom:12px;">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
-                <div>
-                    <div class="ob-label">Prot (g)</div><input class="ob-input" id="cf-prot" placeholder="0"
-                        type="number">
-                </div>
-                <div>
-                    <div class="ob-label">Carb (g)</div><input class="ob-input" id="cf-carb" placeholder="0"
-                        type="number">
-                </div>
-            </div>
-            <button class="btn-add" style="width:100%;" onclick="confirmCustomFood()">Add to Log</button>
+        <div class="stat-row anim" style="padding:0 16px 14px">
+          <div class="stat-mini">
+            <div class="stat-mini-label">Avg Calories</div>
+            <div class="stat-mini-val" id="prog-avg-cal" style="color:var(--orange)">—</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-label">Avg Protein</div>
+            <div class="stat-mini-val" id="prog-avg-prot" style="color:var(--pink)">—</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-label">Water (avg)</div>
+            <div class="stat-mini-val" id="prog-avg-water" style="color:var(--cyan)">—</div>
+          </div>
+          <div class="stat-mini">
+            <div class="stat-mini-label">Workouts</div>
+            <div class="stat-mini-val" id="prog-workouts" style="color:var(--purple)">—</div>
+          </div>
         </div>
-    </div>
 
-    <!-- MANUAL ACTIVITY MODAL -->
-    <div class="modal-backdrop" id="activity-modal" onclick="e=>e.target===this&&closeActivityModal()">
-        <div class="modal-sheet" onclick="e=>e.stopPropagation()">
-            <div class="modal-handle"></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                <div class="modal-title" style="margin-bottom:0;">Log Activity</div>
-                <div onclick="closeActivityModal()" class="close-btn"
-                    style="cursor:pointer;background:var(--bg4);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:400;color:var(--text1);">
-                    ×</div>
-            </div>
-            <div id="activity-list"></div>
-            <button class="btn-sec" style="width:100%;margin-top:12px;" onclick="closeActivityModal()">Cancel</button>
+        <div class="card anim anim-1">
+          <div style="font-size:17px;font-weight:700;margin-bottom:14px">7-Day Calories</div>
+          <div class="chart-wrap"><canvas id="cal-chart"></canvas></div>
         </div>
-    </div>
-
-    <!-- ONBOARDING -->
-    <div class="ob-backdrop" id="ob-backdrop">
-        <div class="ob-sheet">
-            <div onclick="closeOnboarding()" class="close-btn"
-                style="position:absolute;top:20px;right:20px;cursor:pointer;background:var(--bg4);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:400;color:var(--text1);z-index:10;">
-                ×</div>
-            <div class="progress-dots" id="ob-dots"></div>
-            <div id="ob-step-1" class="ob-step active">
-                <div class="ob-title" id="ob-title-1">Welcome 👋</div>
-                <div class="ob-sub">Let's set up your health profile to get personalised recommendations.</div>
-                <div class="ob-label">Your Name</div>
-                <input class="ob-input" id="ob-name" placeholder="e.g. Rahul Sharma" type="text">
-                <div class="ob-label">Age</div>
-                <input class="ob-input" id="ob-age" placeholder="e.g. 28" type="number" min="10" max="100">
-                <div class="ob-label">Gender</div>
-                <div class="ob-seg">
-                    <button class="ob-seg-btn active" id="ob-gender-M" onclick="selectGender('M')">Male</button>
-                    <button class="ob-seg-btn" id="ob-gender-F" onclick="selectGender('F')">Female</button>
-                    <button class="ob-seg-btn" id="ob-gender-O" onclick="selectGender('O')">Other</button>
-                </div>
-            </div>
-            <div id="ob-step-2" class="ob-step">
-                <div class="ob-title" id="ob-title-2">Body Stats 📏</div>
-                <div class="ob-sub">Used to calculate your TDEE and ideal macros.</div>
-                <div class="ob-label">Weight (kg)</div>
-                <input class="ob-input" id="ob-weight" placeholder="e.g. 75" type="number" min="30" max="300">
-                <div class="ob-label">Height (cm)</div>
-                <input class="ob-input" id="ob-height" placeholder="e.g. 175" type="number" min="100" max="250">
-            </div>
-            <div id="ob-step-3" class="ob-step">
-                <div class="ob-title" id="ob-title-3">Activity Level 🏃</div>
-                <div class="ob-sub">How active are you on a typical week?</div>
-                <div id="ob-activity-opts"></div>
-            </div>
-            <div id="ob-step-4" class="ob-step">
-                <div class="ob-title" id="ob-title-4">Your Goal 🎯</div>
-                <div class="ob-sub">What are you working towards?</div>
-                <div id="ob-goal-opts"></div>
-            </div>
-            <div id="ob-step-5" class="ob-step">
-                <div class="ob-title" id="ob-title-5">All Set! 🎉</div>
-                <div class="ob-sub">Here's your personalised plan based on your profile.</div>
-                <div class="card" style="margin:0 0 12px;background:var(--bg3);">
-                    <div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span
-                            style="color:var(--text2);">Daily Calories</span><span
-                            style="font-weight:700;color:var(--orange);" id="ob-result-cals">—</span></div>
-                    <div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span
-                            style="color:var(--text2);">Protein</span><span style="font-weight:700;color:var(--pink);"
-                            id="ob-result-prot">—</span></div>
-                    <div style="display:flex;justify-content:space-between;margin-bottom:10px;"><span
-                            style="color:var(--text2);">Carbs</span><span style="font-weight:700;color:var(--orange);"
-                            id="ob-result-carb">—</span></div>
-                    <div style="display:flex;justify-content:space-between;"><span
-                            style="color:var(--text2);">Fat</span><span style="font-weight:700;color:var(--blue);"
-                            id="ob-result-fat">—</span></div>
-                </div>
-                <div
-                    style="background:rgba(10,132,255,0.12);border-radius:var(--radius-md);padding:14px;border:1px solid rgba(10,132,255,0.3);">
-                    <div style="font-size:13px;color:var(--blue);font-weight:600;margin-bottom:4px;">💡 Your Health
-                        Score</div>
-                    <div style="font-size:32px;font-weight:800;color:var(--green);" id="ob-result-score">—</div>
-                    <div style="font-size:13px;color:var(--text2);margin-top:4px;" id="ob-result-tip"></div>
-                </div>
-            </div>
-            <div style="display:flex;gap:10px;margin-top:24px;" id="ob-nav-btns">
-                <button class="btn-sec" style="flex:1;" id="ob-back-btn" onclick="obBack()">Back</button>
-                <button class="btn-add" style="flex:2;" id="ob-next-btn" onclick="obNext()">Continue</button>
-            </div>
+        <div class="card anim anim-2">
+          <div style="font-size:17px;font-weight:700;margin-bottom:14px">Protein Intake</div>
+          <div class="chart-wrap"><canvas id="prot-chart"></canvas></div>
         </div>
+        <div class="card anim anim-3">
+          <div style="font-size:17px;font-weight:700;margin-bottom:14px">Weight Trend (kg)</div>
+          <div class="chart-wrap"><canvas id="weight-chart"></canvas></div>
+          <button class="btn-sec" style="width:100%;margin-top:12px" onclick="logWeight()">+ Log Today's Weight</button>
+        </div>
+      </div>
+
+      <!-- PROFILE -->
+      <div id="view-profile" class="view">
+        <div class="hdr">
+          <div class="hdr-sub">Account</div>
+          <div class="hdr-title">Profile</div>
+        </div>
+
+        <div class="card anim" style="text-align:center;padding:24px">
+          <div class="profile-avatar" id="prof-avatar" style="background:linear-gradient(135deg,var(--blue),var(--purple))">?</div>
+          <div class="profile-name" id="prof-name">Your Name</div>
+          <div class="profile-sub" id="prof-goal-label">Goal not set</div>
+          <button class="btn-add" style="margin-top:16px;width:100%" onclick="showOnboarding()">
+            <div class="btn-icon-pencil" style="display:flex;align-items:center"></div> Edit Profile
+          </button>
+        </div>
+
+        <div class="card anim anim-1">
+          <div class="list-row">
+            <div class="list-label"><span id="prof-icon-weight"></span> Weight</div>
+            <div class="list-val" id="prof-weight-val">— kg <span class="prof-arrow"></span></div>
+          </div>
+          <div class="list-row">
+            <div class="list-label"><span id="prof-icon-height"></span> Height</div>
+            <div class="list-val" id="prof-height-val">— cm <span class="prof-arrow"></span></div>
+          </div>
+          <div class="list-row">
+            <div class="list-label"><span id="prof-icon-age"></span> Age</div>
+            <div class="list-val" id="prof-age-val">— yr <span class="prof-arrow"></span></div>
+          </div>
+          <div class="list-row">
+            <div class="list-label"><span id="prof-icon-bmi"></span> BMI</div>
+            <div class="list-val" id="prof-bmi-val">— <span class="prof-arrow"></span></div>
+          </div>
+        </div>
+
+        <div class="card anim anim-2">
+          <div class="list-row">
+            <div class="list-label">Daily Calorie Goal</div>
+            <div class="list-val" id="prof-cal-goal" style="color:var(--orange)">2000 kcal</div>
+          </div>
+          <div class="list-row">
+            <div class="list-label">Protein Goal</div>
+            <div class="list-val" id="prof-prot-goal" style="color:var(--pink)">150 g</div>
+          </div>
+          <div class="list-row">
+            <div class="list-label">Water Goal</div>
+            <div class="list-val" style="color:var(--cyan)">2500 ml</div>
+          </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="card anim anim-3">
+          <!-- Dark Mode -->
+          <div class="toggle-wrap" onclick="toggleTheme()">
+            <div class="toggle-label"><span id="icon-moon" style="color:var(--purple)"></span> Dark Mode</div>
+            <button class="ios-toggle on" id="theme-toggle-btn" style="pointer-events:none">
+              <div class="ios-toggle-knob"></div>
+            </button>
+          </div>
+          <!-- Location Tracking -->
+          <div class="toggle-wrap" onclick="toggleLocation()">
+            <div class="toggle-label" style="color:var(--blue)">📍 Location Tracking</div>
+            <button class="ios-toggle" id="loc-toggle" style="pointer-events:none">
+              <div class="ios-toggle-knob"></div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Export / Import -->
+        <div class="card anim anim-4">
+          <div style="font-size:17px;font-weight:700;margin-bottom:14px">Data Management</div>
+          <div style="display:flex;gap:10px">
+            <button class="btn-sec" style="flex:1" onclick="exportData()">
+              📦 Export Data
+            </button>
+            <button class="btn-sec" style="flex:1" onclick="importData()">
+              📥 Import Data
+            </button>
+          </div>
+        </div>
+
+        <div style="height:10px"></div>
+      </div>
+
+    </div><!-- /views -->
+
+    <!-- TAB BAR -->
+    <nav class="tab-bar">
+      <div class="tab-item active" id="tab-home" onclick="switchTab('home')">
+        <div class="tab-icon-home"></div><span>Home</span>
+      </div>
+      <div class="tab-item" id="tab-nutrition" onclick="switchTab('nutrition')">
+        <div class="tab-icon-nutrition"></div><span>Nutrition</span>
+      </div>
+      <div class="tab-item" id="tab-fitness" onclick="switchTab('fitness')">
+        <div class="tab-icon-fitness"></div><span>Fitness</span>
+      </div>
+      <div class="tab-item" id="tab-progress" onclick="switchTab('progress')">
+        <div class="tab-icon-progress"></div><span>Progress</span>
+      </div>
+      <div class="tab-item" id="tab-profile" onclick="switchTab('profile')">
+        <div class="tab-icon-profile"></div><span>Profile</span>
+      </div>
+    </nav>
+  </div>
+
+  <!-- ADD FOOD MODAL -->
+  <div class="modal-backdrop" id="food-modal" onclick="e=>e.target===this&&closeFoodModal()">
+    <div class="modal-sheet" onclick="e=>e.stopPropagation()">
+      <div class="modal-handle"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="modal-title" style="margin-bottom:0">Log Food</div>
+        <div class="close-btn" onclick="closeFoodModal()" role="button" aria-label="Close"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button class="btn-add" style="flex:1;font-size:13px" onclick="setMealType('breakfast')" id="meal-btn-breakfast">🌅 Breakfast</button>
+        <button class="btn-sec" style="flex:1;font-size:13px" onclick="setMealType('lunch')" id="meal-btn-lunch">☀️ Lunch</button>
+        <button class="btn-sec" style="flex:1;font-size:13px" onclick="setMealType('dinner')" id="meal-btn-dinner">🌙 Dinner</button>
+        <button class="btn-sec" style="flex:1;font-size:13px" onclick="setMealType('snack')" id="meal-btn-snack">🍎 Snack</button>
+      </div>
+      <input class="food-search" id="food-search" placeholder="Search food (e.g. Rice, Dal, Chicken…)" oninput="filterFoods(this.value)" autocomplete="off">
+      <button class="btn-sec" style="width:100%;margin-bottom:12px;border:1.5px dashed var(--sep);background:transparent" onclick="openCustomFoodModal()">
+        <span style="font-size:18px;margin-right:8px">+</span> Add Custom Food
+      </button>
+      <div class="food-list" id="food-list"></div>
     </div>
+  </div>
 
-    <!-- TOAST -->
-    <div class="toast" id="toast"></div>
+  <!-- FOOD QUANTITY MODAL -->
+  <div class="modal-backdrop" id="qty-modal" onclick="e=>e.target===this&&closeQtyModal()">
+    <div class="modal-sheet" onclick="e=>e.stopPropagation()">
+      <div class="modal-handle"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="modal-title" id="qty-food-name" style="margin-bottom:0">Food</div>
+        <div class="close-btn" onclick="closeQtyModal()" role="button" aria-label="Close"></div>
+      </div>
+      <div style="font-size:14px;color:var(--text2);margin-bottom:16px" id="qty-food-detail"></div>
+      <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px">SERVINGS</div>
+      <div class="qty-row">
+        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+        <div class="qty-val" id="qty-val">1</div>
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+      </div>
+      <div style="background:var(--bg3);border-radius:var(--radius-md);padding:14px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="color:var(--text2);font-size:14px">Calories</span>
+          <input type="number" id="qty-cals-input" class="ob-input" style="width:80px;margin:0;padding:4px 8px;text-align:right;font-weight:700;color:var(--orange)" oninput="updateCustomMacros('cal')">
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="color:var(--text2);font-size:14px">Protein (g)</span>
+          <input type="number" id="qty-prot-input" class="ob-input" style="width:80px;margin:0;padding:4px 8px;text-align:right" oninput="updateCustomMacros('prot')">
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="color:var(--text2);font-size:14px">Carbs (g)</span>
+          <input type="number" id="qty-carb-input" class="ob-input" style="width:80px;margin:0;padding:4px 8px;text-align:right" oninput="updateCustomMacros('carb')">
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="color:var(--text2);font-size:14px">Fat (g)</span>
+          <input type="number" id="qty-fat-input" class="ob-input" style="width:80px;margin:0;padding:4px 8px;text-align:right" oninput="updateCustomMacros('fat')">
+        </div>
+      </div>
+      <div id="qty-display-static" style="display:none;background:var(--bg3);border-radius:var(--radius-md);padding:14px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--text2);font-size:14px">Calories</span><span id="qty-cals" style="font-weight:700;color:var(--orange)">0 kcal</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--text2);font-size:14px">Protein</span><span id="qty-prot" style="font-weight:600">0 g</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:var(--text2);font-size:14px">Carbs</span><span id="qty-carb" style="font-weight:600">0 g</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text2);font-size:14px">Fat</span><span id="qty-fat" style="font-weight:600">0 g</span></div>
+      </div>
+      <button class="btn-add" style="width:100%" onclick="confirmAddFood()">Add to <span id="qty-meal-label">Meal</span></button>
+    </div>
+  </div>
 
-    <script src="icons.js"></script>
-    <script>
-        // Initial static icons injection
-        function renderStaticIcons() {
-            if (typeof getIcon === 'undefined') return;
+  <!-- CUSTOM FOOD MODAL -->
+  <div class="modal-backdrop" id="custom-modal" onclick="e=>e.target===this&&closeCustomFoodModal()">
+    <div class="modal-sheet" onclick="e=>e.stopPropagation()">
+      <div class="modal-handle"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="modal-title" style="margin-bottom:0">Custom Food</div>
+        <div class="close-btn" onclick="closeCustomFoodModal()" role="button" aria-label="Close"></div>
+      </div>
+      <div class="ob-label">Food Name</div>
+      <input class="ob-input" id="cf-name" placeholder="e.g. Grandma's Samosa" type="text" style="margin-bottom:12px">
+      <div class="ob-label">Calories (kcal)</div>
+      <input class="ob-input" id="cf-cals" placeholder="250" type="number" style="margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+        <div><div class="ob-label">Prot (g)</div><input class="ob-input" id="cf-prot" placeholder="0" type="number"></div>
+        <div><div class="ob-label">Carb (g)</div><input class="ob-input" id="cf-carb" placeholder="0" type="number"></div>
+      </div>
+      <button class="btn-add" style="width:100%" onclick="confirmCustomFood()">Add to Log</button>
+    </div>
+  </div>
 
-            // Tab Icons
-            document.querySelector('.tab-icon-home').innerHTML = getIcon('heart-pulse');
-            document.querySelector('.tab-icon-nutrition').innerHTML = getIcon('utensils');
-            document.querySelector('.tab-icon-fitness').innerHTML = getIcon('dumbbell');
-            document.querySelector('.tab-icon-progress').innerHTML = getIcon('chart-line');
-            document.querySelector('.tab-icon-profile').innerHTML = getIcon('user');
+  <!-- MANUAL ACTIVITY MODAL -->
+  <div class="modal-backdrop" id="activity-modal" onclick="e=>e.target===this&&closeActivityModal()">
+    <div class="modal-sheet" onclick="e=>e.stopPropagation()">
+      <div class="modal-handle"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="modal-title" style="margin-bottom:0">Log Activity</div>
+        <div class="close-btn" onclick="closeActivityModal()" role="button" aria-label="Close"></div>
+      </div>
+      <div id="activity-list"></div>
+      <button class="btn-sec" style="width:100%;margin-top:12px" onclick="closeActivityModal()">Cancel</button>
+    </div>
+  </div>
 
-            // Button Icons
-            document.querySelectorAll('.btn-icon-plus').forEach(el => el.innerHTML = getIcon('plus', '', 20));
-            document.querySelectorAll('.btn-icon-camera').forEach(el => el.innerHTML = getIcon('camera', '', 20));
-            document.querySelectorAll('.btn-icon-pencil').forEach(el => el.innerHTML = getIcon('pencil', '', 20));
-            document.querySelectorAll('.btn-icon-droplet').forEach(el => el.innerHTML = getIcon('droplet', '', 20));
-            document.querySelectorAll('.btn-icon-satellite').forEach(el => el.innerHTML = getIcon('satellite', '', 20));
+  <!-- ONBOARDING -->
+  <div class="ob-backdrop" id="ob-backdrop">
+    <div class="ob-sheet">
+      <div class="close-btn" onclick="closeOnboarding()" role="button" aria-label="Close"
+        style="position:absolute;top:20px;right:20px;z-index:10"></div>
+      <div class="progress-dots" id="ob-dots"></div>
 
-            // Modal Close Buttons
-            document.querySelectorAll('.close-btn').forEach(el => {
-                const size = parseInt(el.getAttribute('data-icon-size')) || 24;
-                el.innerHTML = getIcon('plus', '', size);
-            });
+      <div id="ob-step-1" class="ob-step active">
+        <div class="ob-title" id="ob-title-1">Welcome 👋</div>
+        <div class="ob-sub">Let's set up your health profile to get personalised recommendations.</div>
+        <div class="ob-label">Your Name</div>
+        <input class="ob-input" id="ob-name" placeholder="e.g. Rahul Sharma" type="text">
+        <div class="ob-label">Age</div>
+        <input class="ob-input" id="ob-age" placeholder="e.g. 28" type="number" min="10" max="100">
+        <div class="ob-label">Gender</div>
+        <div class="ob-seg">
+          <button class="ob-seg-btn active" id="ob-gender-M" onclick="selectGender('M')">Male</button>
+          <button class="ob-seg-btn" id="ob-gender-F" onclick="selectGender('F')">Female</button>
+          <button class="ob-seg-btn" id="ob-gender-O" onclick="selectGender('O')">Other</button>
+        </div>
+      </div>
 
-            // Other icons
-            const sic = document.getElementById('score-icon');
-            if (sic) sic.innerHTML = getIcon('heart-pulse', 'icon-green', 14);
+      <div id="ob-step-2" class="ob-step">
+        <div class="ob-title" id="ob-title-2">Body Stats 📏</div>
+        <div class="ob-sub">Used to calculate your TDEE and ideal macros.</div>
+        <div class="ob-label">Weight (kg)</div>
+        <input class="ob-input" id="ob-weight" placeholder="e.g. 75" type="number" min="30" max="300">
+        <div class="ob-label">Height (cm)</div>
+        <input class="ob-input" id="ob-height" placeholder="e.g. 175" type="number" min="100" max="250">
+      </div>
 
-            const moon = document.getElementById('icon-moon');
-            if (moon) moon.innerHTML = getIcon('moon');
-        }
-        window.addEventListener('DOMContentLoaded', renderStaticIcons);
+      <div id="ob-step-3" class="ob-step">
+        <div class="ob-title" id="ob-title-3">Activity Level 🏃</div>
+        <div class="ob-sub">How active are you on a typical week?</div>
+        <div id="ob-activity-opts"></div>
+      </div>
 
-        // Register Service Worker for PWA
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').then(reg => {
-                    console.log('SW registered!', reg);
-                }).catch(err => {
-                    console.log('SW registration failed: ', err);
-                });
-            });
-        }
-    </script>
-    <script src="app.js"></script>
+      <div id="ob-step-4" class="ob-step">
+        <div class="ob-title" id="ob-title-4">Your Goal 🎯</div>
+        <div class="ob-sub">What are you working towards?</div>
+        <div id="ob-goal-opts"></div>
+      </div>
+
+      <div id="ob-step-5" class="ob-step">
+        <div class="ob-title" id="ob-title-5">All Set! 🎉</div>
+        <div class="ob-sub">Here's your personalised plan based on your profile.</div>
+        <div class="card" style="margin:0 0 12px;background:var(--bg3)">
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px"><span style="color:var(--text2)">Daily Calories</span><span style="font-weight:700;color:var(--orange)" id="ob-result-cals">—</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px"><span style="color:var(--text2)">Protein</span><span style="font-weight:700;color:var(--pink)" id="ob-result-prot">—</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px"><span style="color:var(--text2)">Carbs</span><span style="font-weight:700;color:var(--orange)" id="ob-result-carb">—</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Fat</span><span style="font-weight:700;color:var(--blue)" id="ob-result-fat">—</span></div>
+        </div>
+        <div style="background:rgba(10,132,255,0.12);border-radius:var(--radius-md);padding:14px;border:1px solid rgba(10,132,255,0.3)">
+          <div style="font-size:13px;color:var(--blue);font-weight:600;margin-bottom:4px">💡 Your Health Score</div>
+          <div style="font-size:32px;font-weight:800;color:var(--green)" id="ob-result-score">—</div>
+          <div style="font-size:13px;color:var(--text2);margin-top:4px" id="ob-result-tip"></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:24px" id="ob-nav-btns">
+        <button class="btn-sec" style="flex:1" id="ob-back-btn" onclick="obBack()">Back</button>
+        <button class="btn-add" style="flex:2" id="ob-next-btn" onclick="obNext()">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script src="icons.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // PWA Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').then(reg => {
+          console.log('SW registered', reg.scope);
+        }).catch(err => console.warn('SW failed:', err));
+      });
+    }
+  </script>
+
 </body>
-
 </html>
